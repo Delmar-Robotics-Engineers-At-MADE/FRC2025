@@ -32,10 +32,8 @@ public class Drivetrain {
   private final XRPMotor m_leftLeader = new XRPMotor(0);
   private final XRPMotor m_rightLeader = new XRPMotor(1);
 
-  private final Encoder m_leftEncoder = new Encoder(0, 1);
-  private final Encoder m_rightEncoder = new Encoder(2, 3);
-
-  
+  private final Encoder m_leftEncoder = new Encoder(4, 5);
+  private final Encoder m_rightEncoder = new Encoder(6, 7, true);
 
   private final AnalogGyro m_gyro = new AnalogGyro(0);
 

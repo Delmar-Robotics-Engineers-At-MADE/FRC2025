@@ -1,24 +1,13 @@
 {
-  "HALProvider": {
-    "Other Devices": {
-      "motorL": {
-        "header": {
-          "open": true
-        }
-      },
-      "motorR": {
-        "header": {
-          "open": true
-        }
-      }
-    }
-  },
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo"
     }
   },
   "NetworkTables Info": {
+    "Connections": {
+      "open": true
+    },
     "visible": true
   }
 }
