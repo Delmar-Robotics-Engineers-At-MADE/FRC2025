@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
@@ -14,34 +15,65 @@ import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+import edu.wpi.first.wpilibj.SPI;
+// import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+
+import com.kauailabs.navx.frc.AHRS;
+
+class myAHRS extends AHRS {
+  @Override
+  public Rotation2d getRotation2d() {
+        return Rotation2d.fromDegrees(getAngle());
+  }
+
+  public myAHRS(SPI.Port kmxp, byte update_rate_hz) {
+     super(kmxp, update_rate_hz);
+  }
+}
+
+class DriveConstants {
+  public static final int kEncoderCPR = 74;
+  public static final double kWheelDiameterMeters = 0.10;
+  public static final double kEncoderDistancePerPulse =
+      // Assumes the encoders are directly mounted on the wheel shafts
+      (kWheelDiameterMeters * Math.PI) / (double) kEncoderCPR;
+}
 
 /** Represents a mecanum drive style drivetrain. */
 public class Drivetrain {
   public static final double kMaxSpeed = 3.0; // 3 meters per second
   public static final double kMaxAngularSpeed = Math.PI; // 1/2 rotation per second
 
-  private final PWMSparkMax m_frontLeftMotor = new PWMSparkMax(1);
-  private final PWMSparkMax m_frontRightMotor = new PWMSparkMax(2);
-  private final PWMSparkMax m_backLeftMotor = new PWMSparkMax(3);
-  private final PWMSparkMax m_backRightMotor = new PWMSparkMax(4);
+  private final Talon m_frontLeftMotor = new Talon(1);
+  private final Talon m_frontRightMotor = new Talon(3);
+  private final Talon m_backLeftMotor = new Talon(0);
+  private final Talon m_backRightMotor = new Talon(2);
 
-  private final Encoder m_frontLeftEncoder = new Encoder(0, 1);
-  private final Encoder m_frontRightEncoder = new Encoder(2, 3);
-  private final Encoder m_backLeftEncoder = new Encoder(4, 5);
-  private final Encoder m_backRightEncoder = new Encoder(6, 7);
+  private final Encoder m_frontLeftEncoder = new Encoder(2, 3);
+  private final Encoder m_frontRightEncoder = new Encoder(6, 7);
+  private final Encoder m_backLeftEncoder = new Encoder(0, 1);
+  private final Encoder m_backRightEncoder = new Encoder(4, 5);
 
-  private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
-  private final Translation2d m_frontRightLocation = new Translation2d(0.381, -0.381);
-  private final Translation2d m_backLeftLocation = new Translation2d(-0.381, 0.381);
-  private final Translation2d m_backRightLocation = new Translation2d(-0.381, -0.381);
+  // private final Translation2d m_frontLeftLocation = new Translation2d(0.1588, 0.1651);
+  // private final Translation2d m_frontRightLocation = new Translation2d(0.1588, -0.1651);
+  // private final Translation2d m_backLeftLocation = new Translation2d(-0.1588, 0.1651);
+  // private final Translation2d m_backRightLocation = new Translation2d(-0.1588, -0.1651);
+  private final Translation2d m_frontLeftLocation = new Translation2d(-0.1588, 0.1651);
+  private final Translation2d m_frontRightLocation = new Translation2d(0.1588, 0.1651);
+  private final Translation2d m_backLeftLocation = new Translation2d(-0.1588, -0.1651);
+  private final Translation2d m_backRightLocation = new Translation2d(0.1588, -0.1651);
 
   private final PIDController m_frontLeftPIDController = new PIDController(1, 0, 0);
   private final PIDController m_frontRightPIDController = new PIDController(1, 0, 0);
   private final PIDController m_backLeftPIDController = new PIDController(1, 0, 0);
   private final PIDController m_backRightPIDController = new PIDController(1, 0, 0);
 
-  private final AnalogGyro m_gyro = new AnalogGyro(0);
+  private final myAHRS m_gyro = new myAHRS(SPI.Port.kMXP, (byte) 200);
 
   private final MecanumDriveKinematics m_kinematics =
       new MecanumDriveKinematics(
@@ -59,8 +91,28 @@ public class Drivetrain {
     // We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead.
-    m_frontRightMotor.setInverted(true);
     m_backRightMotor.setInverted(true);
+    m_backLeftMotor.setInverted(true);
+
+    m_backRightEncoder.setReverseDirection(true);
+    m_frontRightEncoder.setReverseDirection(true);
+
+    m_frontLeftEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
+    m_backLeftEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
+    m_frontRightEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
+    m_backRightEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
+
+
+    ShuffleboardTab driveBaseTab = Shuffleboard.getTab("Drivebase");
+    driveBaseTab.add("Gyro", m_gyro);
+
+    // Put both encoders in a list layout
+    ShuffleboardLayout encoders =
+        driveBaseTab.getLayout("Encoders", BuiltInLayouts.kList).withPosition(4, 0).withSize(2, 4);
+    encoders.add("Front Left Encoder", m_frontLeftEncoder);
+    encoders.add("Front Right Encoder", m_frontRightEncoder);
+    encoders.add("Rear Left Encoder", m_backLeftEncoder);
+    encoders.add("Rear Right Encoder", m_backRightEncoder);    
   }
 
   /**
@@ -131,12 +183,9 @@ public class Drivetrain {
       double xSpeed, double ySpeed, double rot, boolean fieldRelative, double periodSeconds) {
     var mecanumDriveWheelSpeeds =
         m_kinematics.toWheelSpeeds(
-            ChassisSpeeds.discretize(
-                fieldRelative
-                    ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                        xSpeed, ySpeed, rot, m_gyro.getRotation2d())
-                    : new ChassisSpeeds(xSpeed, ySpeed, rot),
-                periodSeconds));
+            ChassisSpeeds.discretize(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, m_gyro.getRotation2d())
+                                                   : new ChassisSpeeds(xSpeed, ySpeed, rot),
+                                     periodSeconds));
     mecanumDriveWheelSpeeds.desaturate(kMaxSpeed);
     setSpeeds(mecanumDriveWheelSpeeds);
   }
