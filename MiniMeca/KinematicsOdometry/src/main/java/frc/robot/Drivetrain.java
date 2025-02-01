@@ -47,7 +47,7 @@ class DriveConstants {
 /** Represents a mecanum drive style drivetrain. */
 public class Drivetrain {
   public static final double kMaxSpeed = 3.0; // 3 meters per second
-  public static final double kMaxAngularSpeed = Math.PI; // 1/2 rotation per second
+  public static final double kMaxAngularSpeed = 2* Math.PI; // 2 rotation per second
 
   private final Talon m_frontLeftMotor = new Talon(1);
   private final Talon m_frontRightMotor = new Talon(3);
