@@ -74,6 +74,13 @@ public class Drivetrain {
   private final PIDController m_backRightPIDController = new PIDController(1, 0, 0);
 
   private final myAHRS m_gyro = new myAHRS(SPI.Port.kMXP, (byte) 200);
+  ShuffleboardTab m_driveBaseTab;
+  ShuffleboardLayout m_speedsLayout, m_outputsLayout;
+
+  double m_frontLeftOutput, m_frontRightOutput, m_backLeftOutput, m_backRightOutput;
+  // double m_frontLeftSpeed, m_frontRightSpeed, m_backLeftSpeed, m_backRightSpeed;
+  MecanumDriveWheelSpeeds m_speeds = new MecanumDriveWheelSpeeds(0,0,0,0);
+  double m_rotationRadsPerSec;
 
   private final MecanumDriveKinematics m_kinematics =
       new MecanumDriveKinematics(
@@ -83,7 +90,7 @@ public class Drivetrain {
       new MecanumDriveOdometry(m_kinematics, m_gyro.getRotation2d(), getCurrentDistances());
 
   // Gains are for example purposes only - must be determined for your own robot!
-  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 3);
+  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(3, 6);
 
   /** Constructs a MecanumDrive and resets the gyro. */
   public Drivetrain() {
@@ -103,16 +110,35 @@ public class Drivetrain {
     m_backRightEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
 
 
-    ShuffleboardTab driveBaseTab = Shuffleboard.getTab("Drivebase");
-    driveBaseTab.add("Gyro", m_gyro);
+    m_driveBaseTab = Shuffleboard.getTab("Drivebase");
+    m_driveBaseTab.add("Gyro", m_gyro);
+    // m_driveBaseTab.add("Speeds", m_speeds);
 
     // Put both encoders in a list layout
-    ShuffleboardLayout encoders =
-        driveBaseTab.getLayout("Encoders", BuiltInLayouts.kList).withPosition(4, 0).withSize(2, 4);
-    encoders.add("Front Left Encoder", m_frontLeftEncoder);
-    encoders.add("Front Right Encoder", m_frontRightEncoder);
-    encoders.add("Rear Left Encoder", m_backLeftEncoder);
-    encoders.add("Rear Right Encoder", m_backRightEncoder);    
+    ShuffleboardLayout encodersLayout =
+        m_driveBaseTab.getLayout("Encoders", BuiltInLayouts.kList).withPosition(2, 0).withSize(2, 4);
+    encodersLayout.add("Front Left Encoder", m_frontLeftEncoder);
+    encodersLayout.add("Front Right Encoder", m_frontRightEncoder);
+    encodersLayout.add("Rear Left Encoder", m_backLeftEncoder);
+    encodersLayout.add("Rear Right Encoder", m_backRightEncoder);    
+
+    // m_outputsLayout =
+    //     m_driveBaseTab.getLayout("Outputs", BuiltInLayouts.kList).withPosition(6, 0).withSize(1, 4);
+    // encodersLayout.add("Front Left Output", () -> m_frontLeftOutput);
+    // encodersLayout.add("Front Right Output", m_frontRightOutput);
+    // encodersLayout.add("Rear Left Output", m_backLeftOutput);
+    // encodersLayout.add("Rear Right Output", m_backRightOutput);
+
+    m_speedsLayout =
+        m_driveBaseTab.getLayout("Speeds", BuiltInLayouts.kList).withPosition(4, 0).withSize(2, 5);
+    m_speedsLayout.addDouble("Front Left Speed", () -> getFrontLeftMetersPerSecond());
+    m_speedsLayout.addDouble("Front Right Speed", () -> getFrontRightMetersPerSecond());
+    m_speedsLayout.addDouble("Rear Left Speed", () -> getRearLeftMetersPerSecond());
+    m_speedsLayout.addDouble("Rear Right Speed", () -> getRearRightMetersPerSecond());
+    m_speedsLayout.addDouble("Rotation Rads/sec", () -> getRotationRadsPerSec());
+
+
+
   }
 
   /**
@@ -152,23 +178,20 @@ public class Drivetrain {
     final double backLeftFeedforward = m_feedforward.calculate(speeds.rearLeftMetersPerSecond);
     final double backRightFeedforward = m_feedforward.calculate(speeds.rearRightMetersPerSecond);
 
-    final double frontLeftOutput =
-        m_frontLeftPIDController.calculate(
-            m_frontLeftEncoder.getRate(), speeds.frontLeftMetersPerSecond);
-    final double frontRightOutput =
-        m_frontRightPIDController.calculate(
-            m_frontRightEncoder.getRate(), speeds.frontRightMetersPerSecond);
-    final double backLeftOutput =
-        m_backLeftPIDController.calculate(
-            m_backLeftEncoder.getRate(), speeds.rearLeftMetersPerSecond);
-    final double backRightOutput =
-        m_backRightPIDController.calculate(
-            m_backRightEncoder.getRate(), speeds.rearRightMetersPerSecond);
+    m_frontLeftOutput = m_frontLeftPIDController.calculate(m_frontLeftEncoder.getRate(), speeds.frontLeftMetersPerSecond);
+    m_frontRightOutput = m_frontRightPIDController.calculate(m_frontRightEncoder.getRate(), speeds.frontRightMetersPerSecond);
+    m_backLeftOutput = m_backLeftPIDController.calculate(m_backLeftEncoder.getRate(), speeds.rearLeftMetersPerSecond);
+    m_backRightOutput = m_backRightPIDController.calculate(m_backRightEncoder.getRate(), speeds.rearRightMetersPerSecond);
 
-    m_frontLeftMotor.setVoltage(frontLeftOutput + frontLeftFeedforward);
-    m_frontRightMotor.setVoltage(frontRightOutput + frontRightFeedforward);
-    m_backLeftMotor.setVoltage(backLeftOutput + backLeftFeedforward);
-    m_backRightMotor.setVoltage(backRightOutput + backRightFeedforward);
+    m_frontLeftMotor.setVoltage(m_frontLeftOutput + frontLeftFeedforward);
+    m_frontRightMotor.setVoltage(m_frontRightOutput + frontRightFeedforward);
+    m_backLeftMotor.setVoltage(m_backLeftOutput + backLeftFeedforward);
+    m_backRightMotor.setVoltage(m_backRightOutput + backRightFeedforward);
+
+    m_speeds.frontLeftMetersPerSecond = speeds.frontLeftMetersPerSecond;
+    m_speeds.frontRightMetersPerSecond = speeds.frontRightMetersPerSecond;
+    m_speeds.rearLeftMetersPerSecond = speeds.rearLeftMetersPerSecond;
+    m_speeds.rearRightMetersPerSecond = speeds.rearRightMetersPerSecond;
   }
 
   /**
@@ -188,10 +211,17 @@ public class Drivetrain {
                                      periodSeconds));
     mecanumDriveWheelSpeeds.desaturate(kMaxSpeed);
     setSpeeds(mecanumDriveWheelSpeeds);
+    m_rotationRadsPerSec = rot;
   }
 
   /** Updates the field relative position of the robot. */
   public void updateOdometry() {
     m_odometry.update(m_gyro.getRotation2d(), getCurrentDistances());
   }
+
+  public double getFrontLeftMetersPerSecond () { return m_speeds.frontLeftMetersPerSecond;}
+  public double getFrontRightMetersPerSecond () { return m_speeds.frontRightMetersPerSecond;}
+  public double getRearLeftMetersPerSecond () { return m_speeds.rearLeftMetersPerSecond;}
+  public double getRearRightMetersPerSecond () { return m_speeds.rearRightMetersPerSecond;}
+  public double getRotationRadsPerSec () { return m_rotationRadsPerSec;}
 }
