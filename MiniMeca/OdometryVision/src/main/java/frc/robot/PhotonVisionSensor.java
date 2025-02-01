@@ -28,8 +28,8 @@ import edu.wpi.first.math.util.Units;
 /** This class represents a sensor for detecting april elements of the game field using PhotonVision. */
 public final class PhotonVisionSensor {
 
-  // The name of the network table here MUST match the name specified in the photonvision settings "Hostname" field
-  static PhotonCamera camera = new PhotonCamera("photonvision");
+  // The name of the network table here MUST match the name specified for the camera in the UI
+  static PhotonCamera camera = new PhotonCamera("photoncamera");
 
   /// @todo Fill this in with the correct measurements later
   //Cam mounted facing forward, half a meter forward of center, half a meter up from center.
