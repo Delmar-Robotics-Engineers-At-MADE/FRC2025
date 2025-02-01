@@ -226,7 +226,7 @@ public class Drivetrain {
         visionPose.estimatedPose.toPose2d(),
         visionPose.timestampSeconds);
     } else {
-      // Handle the case where the Optional is empty
+      System.out.println("No odometry update available");
     }
   }
 }
