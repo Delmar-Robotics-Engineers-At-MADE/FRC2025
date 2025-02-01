@@ -96,6 +96,6 @@ public final class PhotonVisionSensor {
       return photonPoseEstimator.update(latestResult);
     }
 
-  return null;
+    return Optional.empty();
 }
 }
