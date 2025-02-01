@@ -6,7 +6,9 @@ package frc.robot;
 
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Optional;
 
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
@@ -27,15 +29,14 @@ import edu.wpi.first.math.util.Units;
 public final class PhotonVisionSensor {
 
   // The name of the network table here MUST match the name specified in the photonvision settings "Hostname" field
-  PhotonCamera camera = new PhotonCamera("photonvision");
+  static PhotonCamera camera = new PhotonCamera("photonvision");
 
   /// @todo Fill this in with the correct measurements later
   //Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-  Transform3d robotToCam = new Transform3d(new Translation3d(0.5, 0.0, 0.5), new Rotation3d(0,0,0));
+  static Transform3d robotToCam = new Transform3d(new Translation3d(0.5, 0.0, 0.5), new Rotation3d(0,0,0));
 
-  /// @todo Update these resource file here to set it specifically to the 2025 version once we are sure how to get it
-  AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);    
-  PhotonPoseEstimator photonPoseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam);
+  static AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);    
+  static PhotonPoseEstimator photonPoseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam);
 
   private PhotonVisionSensor() {
     // Utility class
@@ -66,12 +67,35 @@ public final class PhotonVisionSensor {
    *
    * @param estimatedRobotPose The robot pose.
    */
-  public static Pose2d getEstimatedGlobalPose(Pose2d estimatedRobotPose) {
-    var rand =
-        StateSpaceUtil.makeWhiteNoiseVector(VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(30)));
-    return new Pose2d(
-        estimatedRobotPose.getX() + rand.get(0, 0),
-        estimatedRobotPose.getY() + rand.get(1, 0),
-        estimatedRobotPose.getRotation().plus(new Rotation2d(rand.get(2, 0))));
-  }
+  // public static Pose2d getEstimatedGlobalPose(Pose2d estimatedRobotPose) {
+  //   var rand =
+  //       StateSpaceUtil.makeWhiteNoiseVector(VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(30)));
+  //   return new Pose2d(
+  //       estimatedRobotPose.getX() + rand.get(0, 0),
+  //       estimatedRobotPose.getY() + rand.get(1, 0),
+  //       estimatedRobotPose.getRotation().plus(new Rotation2d(rand.get(2, 0))));
+  // }
+
+  public static Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
+    photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
+
+    List<PhotonPipelineResult> results = camera.getAllUnreadResults();
+
+    if (!results.isEmpty()) {
+      ListIterator<PhotonPipelineResult> iter = results.listIterator();
+      PhotonPipelineResult latestResult = iter.next();
+      
+      while (iter.hasNext()) {
+        PhotonPipelineResult temp = iter.next();
+        //temp.hasTargets()
+        if (true) {
+          latestResult = temp;
+        }
+      }
+
+      return photonPoseEstimator.update(latestResult);
+    }
+
+  return null;
+}
 }

@@ -28,6 +28,10 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 
+import java.util.Optional;
+
+import org.photonvision.EstimatedRobotPose;
+
 import com.kauailabs.navx.frc.AHRS;
 
 class myAHRS extends AHRS {
@@ -211,9 +215,18 @@ public class Drivetrain {
   /** Updates the field relative position of the robot. */
   public void updateOdometry() {
     m_poseEstimator.update(m_gyro.getRotation2d(), getCurrentDistances());
+    Optional<EstimatedRobotPose> visionOptional = PhotonVisionSensor.getEstimatedGlobalPose(m_poseEstimator.getEstimatedPosition());
+    
+    if (visionOptional.isPresent()) {
+      EstimatedRobotPose visionPose = visionOptional.get(); 
 
-    m_poseEstimator.addVisionMeasurement(
-      PhotonVisionSensor.getEstimatedGlobalPose(m_poseEstimator.getEstimatedPosition()),
-      Timer.getTimestamp() - 0.3);
+      System.out.println("X: " + visionPose.estimatedPose.toPose2d().getX());
+
+      m_poseEstimator.addVisionMeasurement(
+        visionPose.estimatedPose.toPose2d(),
+        visionPose.timestampSeconds);
+    } else {
+      // Handle the case where the Optional is empty
+    }
   }
 }
