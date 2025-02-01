@@ -213,7 +213,7 @@ public class Drivetrain {
     m_poseEstimator.update(m_gyro.getRotation2d(), getCurrentDistances());
 
     m_poseEstimator.addVisionMeasurement(
-      ExampleGlobalMeasurementSensor.getEstimatedGlobalPose(m_poseEstimator.getEstimatedPosition()),
+      PhotonVisionSensor.getEstimatedGlobalPose(m_poseEstimator.getEstimatedPosition()),
       Timer.getTimestamp() - 0.3);
   }
 }
