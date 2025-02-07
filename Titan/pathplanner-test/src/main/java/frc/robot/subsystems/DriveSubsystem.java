@@ -100,7 +100,7 @@ public class DriveSubsystem extends SubsystemBase {
             (speeds, feedforwards) -> driveRobotRelative(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
             new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
                     new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-                    new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+                    new PIDConstants(1.0, 0.0, 0.0) // Rotation PID constants
             ),
             config, // The robot configuration
             () -> {
@@ -142,6 +142,7 @@ public class DriveSubsystem extends SubsystemBase {
     return m_odometry.getPoseMeters();
   }
 
+  // simple version, without gyro reference
   public void resetPose (Pose2d pose) {
     m_odometry.resetPose(pose);
   }
@@ -164,7 +165,7 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   /**
-   * Resets the odometry to the specified pose.
+   * Resets the odometry to the specified pose, except use gyro.
    *
    * @param pose The pose to which to set the odometry.
    */

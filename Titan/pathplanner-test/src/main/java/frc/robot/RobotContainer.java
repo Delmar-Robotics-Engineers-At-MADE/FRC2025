@@ -15,6 +15,8 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
@@ -27,6 +29,8 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import java.util.List;
+
+import com.pathplanner.lib.auto.AutoBuilder;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -41,10 +45,15 @@ public class RobotContainer {
   // The driver's controller
   /* XboxController */ GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
 
+  private final SendableChooser<Command> m_autoChooser;
+
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    m_autoChooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Chooser", m_autoChooser);
+
     // Configure the button bindings
     configureButtonBindings();
 
@@ -127,8 +136,10 @@ public class RobotContainer {
     // do this in command, so we can repeat it, was... m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
 
     // Run path following command, then stop at the end.
-    return resetPoseCommand
+    Command sampleCmd = resetPoseCommand
         .andThen(swerveControllerCommand)
         .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+
+    return m_autoChooser.getSelected();
   }
 }
