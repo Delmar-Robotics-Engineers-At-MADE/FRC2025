@@ -15,6 +15,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 // import edu.wpi.first.wpilibj.ADIS16470_IMU;
 // import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import frc.robot.Constants.DriveConstants;
@@ -54,13 +56,28 @@ public class DriveSubsystem extends SubsystemBase {
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(m_gyro.getAngle()),
+      Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
           m_rearLeft.getPosition(),
           m_rearRight.getPosition()
       });
+
+  ShuffleboardTab m_driveBaseTab;
+
+  private void setupDashboard() {
+    m_driveBaseTab = Shuffleboard.getTab("Drivebase");
+    m_driveBaseTab.add("Gyro", m_gyro);
+    m_driveBaseTab.addDouble("Pose X", () -> getPoseX());
+    m_driveBaseTab.addDouble("Pose Y", () -> getPoseY());
+    m_driveBaseTab.addString("Rotation", () -> getPoseRot());
+
+  }
+
+  double getPoseX () {return m_odometry.getPoseMeters().getX();}
+  double getPoseY () {return m_odometry.getPoseMeters().getY();}
+  String getPoseRot () {return m_odometry.getPoseMeters().getRotation().toString();}
 
   /** Creates a new DriveSubsystem. */ // constructor
   public DriveSubsystem() {
@@ -99,13 +116,15 @@ public class DriveSubsystem extends SubsystemBase {
             },
             this // Reference to this subsystem to set requirements
     );
+
+    setupDashboard();
   }
 
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
+        Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -151,7 +170,7 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void resetOdometry(Pose2d pose) {
     m_odometry.resetPosition(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
+        Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),

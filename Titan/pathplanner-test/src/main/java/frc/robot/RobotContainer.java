@@ -22,6 +22,7 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -107,6 +108,9 @@ public class RobotContainer {
         AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
+    Command resetPoseCommand = new InstantCommand(() -> 
+        m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose()));
+
     SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
         exampleTrajectory,
         m_robotDrive::getPose, // Functional interface to feed supplier
@@ -120,9 +124,11 @@ public class RobotContainer {
         m_robotDrive);
 
     // Reset odometry to the starting pose of the trajectory.
-    m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
+    // do this in command, so we can repeat it, was... m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
 
     // Run path following command, then stop at the end.
-    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+    return resetPoseCommand
+        .andThen(swerveControllerCommand)
+        .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
   }
 }
