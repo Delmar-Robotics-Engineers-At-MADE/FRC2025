@@ -22,6 +22,10 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import java.util.Optional;
+
+import org.photonvision.EstimatedRobotPose;
+
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -72,12 +76,13 @@ public class DriveSubsystem extends SubsystemBase {
     m_driveBaseTab.addDouble("Pose X", () -> getPoseX());
     m_driveBaseTab.addDouble("Pose Y", () -> getPoseY());
     m_driveBaseTab.addString("Rotation", () -> getPoseRot());
-
   }
 
   double getPoseX () {return m_odometry.getPoseMeters().getX();}
   double getPoseY () {return m_odometry.getPoseMeters().getY();}
   String getPoseRot () {return m_odometry.getPoseMeters().getRotation().toString();}
+
+  Pose2d getEstimatedPosition() {return m_odometry.getPoseMeters();}
 
   /** Creates a new DriveSubsystem. */ // constructor
   public DriveSubsystem() {
@@ -120,17 +125,26 @@ public class DriveSubsystem extends SubsystemBase {
     setupDashboard();
   }
 
+  SwerveModulePosition[] getCurrentPositions() {
+    return new SwerveModulePosition[] {
+      m_frontLeft.getPosition(),
+      m_frontRight.getPosition(),
+      m_rearLeft.getPosition(),
+      m_rearRight.getPosition()
+    };
+  }
+
+  public void resetOdometryToVision (PhotonVisionSensor vision) {
+    m_odometry.update(m_gyro.getRotation2d(), getCurrentPositions());
+    resetPose(vision.getLatestEstimatedPose(getPose()));
+  }
+
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(
         Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
-        new SwerveModulePosition[] {
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_rearLeft.getPosition(),
-            m_rearRight.getPosition()
-        });
+        getCurrentPositions());
   }
 
   /**
