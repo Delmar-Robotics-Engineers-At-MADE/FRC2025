@@ -24,15 +24,12 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.PhotonVisionSensor;
-import frc.robot.commands.MySwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import java.util.List;
-
-import org.photonvision.PhotonVersion;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
@@ -98,9 +95,6 @@ public class RobotContainer {
     new JoystickButton(m_driverController, 3) // thumb button on flight controller
         .whileTrue(getAutonomousCommand());
 
-    Command resetOdometryToVisionCmd = new RunCommand(() -> m_robotDrive.resetOdometryToVision(m_photon), m_robotDrive, m_photon);
-                
-
   }
 
   
@@ -145,28 +139,6 @@ public class RobotContainer {
         thetaController,
         m_robotDrive::setModuleStates,
         m_robotDrive);
-
-    // MySwerveControllerCommand myswerveControllerCommand = new MySwerveControllerCommand(
-    //     m_robotDrive::getPose, // Functional interface to feed supplier
-    //     DriveConstants.kDriveKinematics,
-    //     new PIDController(AutoConstants.kPXController, 0, 0),
-    //     new PIDController(AutoConstants.kPYController, 0, 0),
-    //     thetaController,
-    //     m_robotDrive::setModuleStates,
-    //     m_robotDrive);    
-    // myswerveControllerCommand.setTrajectory(exampleTrajectory);
-
-    // Reset odometry to the starting pose of the trajectory.
-    // do this in command, so we can repeat it, was... m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
-
-    // Run path following command, then stop at the end.
-    // Command sampleCmd = resetPoseCommand
-    //     .andThen(swerveControllerCommand)
-    //     .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
-
-    // Command myCmd = resetPoseCommand
-    //     .andThen(myswerveControllerCommand)
-    //     .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 
     Command myCmd = resetPoseCommand
         .andThen(m_robotDrive.setTrajectoryToCollectorCmd())

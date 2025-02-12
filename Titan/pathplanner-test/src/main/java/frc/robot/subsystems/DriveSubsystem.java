@@ -33,9 +33,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.List;
-import java.util.Optional;
-
-import org.photonvision.EstimatedRobotPose;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -316,21 +313,6 @@ public class DriveSubsystem extends SubsystemBase {
         m_trajectoryConfigForTeleop);
   }
      
-  // public Command trajectoryToCollectorCmd() {
-  //   return new InstantCommand(() -> buildTrajectoryToCollector());
-  // }
-
-  // public Command swerveControllerForTeleop() {
-  //   return new MySwerveControllerCommand(
-  //       this::getPose, // Functional interface to feed supplier
-  //       DriveConstants.kDriveKinematics,
-  //       new PIDController(AutoConstants.kPXController, 0, 0),
-  //       new PIDController(AutoConstants.kPYController, 0, 0),
-  //       m_thetaControllerForTeleop,
-  //       this::setModuleStates,
-  //       this);
-  // }
-
   public Command setTrajectoryToCollectorCmd() {
     return new InstantCommand(() -> setTrajectoryToCollector());
   }

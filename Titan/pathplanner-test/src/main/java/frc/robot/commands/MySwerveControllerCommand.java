@@ -47,10 +47,6 @@ public class MySwerveControllerCommand extends Command {
   private final DriveSubsystem m_driveSystem;
   private final PhotonVisionSensor m_photon;
 
-  // public void setTrajectory (Trajectory t) {
-  //   m_trajectory = t;
-  //   m_desiredRotation = () -> t.getStates().get(t.getStates().size() - 1).poseMeters.getRotation();
-  // }
 
   /**
    * Constructs a new SwerveControllerCommand that when executed will follow the provided
