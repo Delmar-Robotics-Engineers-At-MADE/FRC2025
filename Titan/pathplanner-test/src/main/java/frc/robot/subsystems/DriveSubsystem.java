@@ -305,16 +305,24 @@ public class DriveSubsystem extends SubsystemBase {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
 
-  public void setTrajectoryToCollector() {
+  public void setTrajectoryToCollector(PhotonVisionSensor photon) {
+    resetOdometryToVision(photon);
+    // m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
+    //     new Pose2d(0, 0, new Rotation2d(0)),
+    //     List.of(),
+    //     new Pose2d(2, -2, new Rotation2d(0)),
+    //     m_trajectoryConfigForTeleop);
+
     m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
-        new Pose2d(0, 0, new Rotation2d(0)),
-        List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
-        new Pose2d(3, 0, new Rotation2d(0)),
+        getPose(),
+        List.of(),
+        new Pose2d(11.6, 7.5, new Rotation2d(Math.PI/2)),
         m_trajectoryConfigForTeleop);
+        
   }
      
-  public Command setTrajectoryToCollectorCmd() {
-    return new InstantCommand(() -> setTrajectoryToCollector());
+  public Command setTrajectoryToCollectorCmd(PhotonVisionSensor photon) {
+    return new InstantCommand(() -> setTrajectoryToCollector(photon));
   }
 
   public Command getSwerveControllerCmdForTeleop(PhotonVisionSensor photon) {

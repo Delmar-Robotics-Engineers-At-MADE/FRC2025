@@ -141,7 +141,7 @@ public class RobotContainer {
         m_robotDrive);
 
     Command myCmd = resetPoseCommand
-        .andThen(m_robotDrive.setTrajectoryToCollectorCmd())
+        .andThen(m_robotDrive.setTrajectoryToCollectorCmd(m_photon))
         .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
         .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 
