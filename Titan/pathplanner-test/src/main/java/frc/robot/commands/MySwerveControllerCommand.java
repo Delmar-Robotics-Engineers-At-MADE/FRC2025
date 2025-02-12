@@ -17,6 +17,8 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.PhotonVisionSensor;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -42,11 +44,13 @@ public class MySwerveControllerCommand extends Command {
   private final HolonomicDriveController m_controller;
   private final Consumer<SwerveModuleState[]> m_outputModuleStates;
   private  Supplier<Rotation2d> m_desiredRotation;
+  private final DriveSubsystem m_driveSystem;
+  private final PhotonVisionSensor m_photon;
 
-  public void setTrajectory (Trajectory t) {
-    m_trajectory = t;
-    m_desiredRotation = () -> t.getStates().get(t.getStates().size() - 1).poseMeters.getRotation();
-  }
+  // public void setTrajectory (Trajectory t) {
+  //   m_trajectory = t;
+  //   m_desiredRotation = () -> t.getStates().get(t.getStates().size() - 1).poseMeters.getRotation();
+  // }
 
   /**
    * Constructs a new SwerveControllerCommand that when executed will follow the provided
@@ -78,6 +82,7 @@ public class MySwerveControllerCommand extends Command {
       ProfiledPIDController thetaController,
       // Supplier<Rotation2d> desiredRotation,
       Consumer<SwerveModuleState[]> outputModuleStates,
+      DriveSubsystem drive, PhotonVisionSensor photon,
       Subsystem... requirements) {
     this(
         // trajectory,
@@ -89,6 +94,7 @@ public class MySwerveControllerCommand extends Command {
             requireNonNullParam(thetaController, "thetaController", "SwerveControllerCommand")),
         // desiredRotation,
         outputModuleStates,
+        drive, photon,
         requirements);
   }
 
@@ -119,6 +125,7 @@ public class MySwerveControllerCommand extends Command {
       HolonomicDriveController controller,
       // Supplier<Rotation2d> desiredRotation,
       Consumer<SwerveModuleState[]> outputModuleStates,
+      DriveSubsystem drive, PhotonVisionSensor photon,
       Subsystem... requirements) {
     // m_trajectory = requireNonNullParam(trajectory, "trajectory", "SwerveControllerCommand");
     m_pose = requireNonNullParam(pose, "pose", "SwerveControllerCommand");
@@ -131,11 +138,16 @@ public class MySwerveControllerCommand extends Command {
     m_outputModuleStates =
         requireNonNullParam(outputModuleStates, "outputModuleStates", "SwerveControllerCommand");
 
+    m_driveSystem = drive;
+    m_photon = photon;
+
     addRequirements(requirements);
   }
 
   @Override
   public void initialize() {
+    m_trajectory = m_driveSystem.getTrajectoryForTeleop();
+    m_desiredRotation = () -> m_trajectory.getStates().get(m_trajectory.getStates().size() - 1).poseMeters.getRotation();
     m_timer.restart();
   }
 

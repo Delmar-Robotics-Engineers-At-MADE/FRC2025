@@ -7,21 +7,32 @@ package frc.robot.subsystems;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import frc.robot.Constants.AutoConstants;
 // import edu.wpi.first.wpilibj.ADIS16470_IMU;
 // import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.commands.MySwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
@@ -67,6 +78,22 @@ public class DriveSubsystem extends SubsystemBase {
           m_rearLeft.getPosition(),
           m_rearRight.getPosition()
       });
+
+  // ********* stuff for following paths in teleop ***********
+
+  private  Trajectory m_trajectoryForTeleop;
+
+  TrajectoryConfig m_trajectoryConfigForTeleop = new TrajectoryConfig(
+      AutoConstants.kMaxSpeedMetersPerSecond/4,
+      AutoConstants.kMaxAccelerationMetersPerSecondSquared/2)
+      // Add kinematics to ensure max speed is actually obeyed
+      .setKinematics(DriveConstants.kDriveKinematics);
+
+  ProfiledPIDController m_thetaControllerForTeleop = new ProfiledPIDController(
+        AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
+
+  // ************************************************************
+
 
   ShuffleboardTab m_driveBaseTab;
 
@@ -123,6 +150,9 @@ public class DriveSubsystem extends SubsystemBase {
     );
 
     setupDashboard();
+
+    m_thetaControllerForTeleop.enableContinuousInput(-Math.PI, Math.PI);
+
   }
 
   SwerveModulePosition[] getCurrentPositions() {
@@ -277,4 +307,49 @@ public class DriveSubsystem extends SubsystemBase {
   public double getTurnRate() {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
+
+  public void setTrajectoryToCollector() {
+    m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
+        new Pose2d(0, 0, new Rotation2d(0)),
+        List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
+        new Pose2d(3, 0, new Rotation2d(0)),
+        m_trajectoryConfigForTeleop);
+  }
+     
+  // public Command trajectoryToCollectorCmd() {
+  //   return new InstantCommand(() -> buildTrajectoryToCollector());
+  // }
+
+  // public Command swerveControllerForTeleop() {
+  //   return new MySwerveControllerCommand(
+  //       this::getPose, // Functional interface to feed supplier
+  //       DriveConstants.kDriveKinematics,
+  //       new PIDController(AutoConstants.kPXController, 0, 0),
+  //       new PIDController(AutoConstants.kPYController, 0, 0),
+  //       m_thetaControllerForTeleop,
+  //       this::setModuleStates,
+  //       this);
+  // }
+
+  public Command setTrajectoryToCollectorCmd() {
+    return new InstantCommand(() -> setTrajectoryToCollector());
+  }
+
+  public Command getSwerveControllerCmdForTeleop(PhotonVisionSensor photon) {
+    return new MySwerveControllerCommand(
+        this::getPose, // Functional interface to feed supplier
+        DriveConstants.kDriveKinematics,
+        new PIDController(AutoConstants.kPXController, 0, 0),
+        new PIDController(AutoConstants.kPYController, 0, 0),
+        m_thetaControllerForTeleop,
+        this::setModuleStates,
+        this, photon,
+        this);
+  }
+
+  public Trajectory getTrajectoryForTeleop() {
+    return m_trajectoryForTeleop;
+  }
+
+
 }
