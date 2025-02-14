@@ -91,14 +91,12 @@ public final class PhotonVisionSensor extends SubsystemBase {
 
   public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
     photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
-
     List<PhotonPipelineResult> results = camera.getAllUnreadResults();
     Optional<EstimatedRobotPose> result = Optional.empty();
 
     if (!results.isEmpty()) {
       ListIterator<PhotonPipelineResult> iter = results.listIterator();
       PhotonPipelineResult latestResult = iter.next();
-      
       while (iter.hasNext()) {
         PhotonPipelineResult temp = iter.next();
         //temp.hasTargets()
@@ -109,7 +107,6 @@ public final class PhotonVisionSensor extends SubsystemBase {
 
       result = photonPoseEstimator.update(latestResult);
     }
-
     return result;
   }
 

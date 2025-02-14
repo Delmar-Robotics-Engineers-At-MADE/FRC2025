@@ -93,8 +93,8 @@ public class DriveSubsystem extends SubsystemBase {
   private  Trajectory m_trajectoryForTeleop;
 
   TrajectoryConfig m_trajectoryConfigForTeleop = new TrajectoryConfig(
-      AutoConstants.kMaxSpeedMetersPerSecond/4,
-      AutoConstants.kMaxAccelerationMetersPerSecondSquared/2)
+      AutoConstants.kMaxSpeedMetersPerSecond/2,
+      AutoConstants.kMaxAccelerationMetersPerSecondSquared)
       // Add kinematics to ensure max speed is actually obeyed
       .setKinematics(DriveConstants.kDriveKinematics);
 
