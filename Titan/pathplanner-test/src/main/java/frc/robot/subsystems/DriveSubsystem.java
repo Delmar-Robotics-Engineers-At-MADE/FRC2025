@@ -7,8 +7,10 @@ package frc.robot.subsystems;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -20,6 +22,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -33,6 +36,9 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.List;
+import java.util.Optional;
+
+import org.photonvision.EstimatedRobotPose;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -65,16 +71,22 @@ public class DriveSubsystem extends SubsystemBase {
   // The gyro sensor
   private final AHRS m_gyro = new AHRS();
 
+  // photon vision subsystem
+  PhotonVisionSensor m_photon = null;
+
   // Odometry class for tracking robot pose
-  SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
+  SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
       Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
           m_rearLeft.getPosition(),
-          m_rearRight.getPosition()
-      });
+          m_rearRight.getPosition()},
+          Pose2d.kZero,
+        VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5)),
+        VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(30))
+      );
 
   // ********* stuff for following paths in teleop ***********
 
@@ -102,14 +114,16 @@ public class DriveSubsystem extends SubsystemBase {
     m_driveBaseTab.addString("Rotation", () -> getPoseRot());
   }
 
-  double getPoseX () {return m_odometry.getPoseMeters().getX();}
-  double getPoseY () {return m_odometry.getPoseMeters().getY();}
-  String getPoseRot () {return m_odometry.getPoseMeters().getRotation().toString();}
+  double getPoseX () {return m_odometry.getEstimatedPosition().getX();}
+  double getPoseY () {return m_odometry.getEstimatedPosition().getY();}
+  String getPoseRot () {return m_odometry.getEstimatedPosition().getRotation().toString();}
 
-  Pose2d getEstimatedPosition() {return m_odometry.getPoseMeters();}
+  Pose2d getEstimatedPosition() {return m_odometry.getEstimatedPosition();}
 
   /** Creates a new DriveSubsystem. */ // constructor
-  public DriveSubsystem() {
+  public DriveSubsystem(PhotonVisionSensor photon) {
+    m_photon = photon;
+
     // Usage reporting for MAXSwerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
 
@@ -172,6 +186,16 @@ public class DriveSubsystem extends SubsystemBase {
     m_odometry.update(
         Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
         getCurrentPositions());
+
+    // add vision data
+    Optional<EstimatedRobotPose> visionOptional = m_photon.getEstimatedGlobalPose(
+        m_odometry.getEstimatedPosition());
+    if (visionOptional.isPresent()) {
+      EstimatedRobotPose visionPose = visionOptional.get(); 
+      m_odometry.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
+    }
+
+    
   }
 
   /**
@@ -180,7 +204,7 @@ public class DriveSubsystem extends SubsystemBase {
    * @return The pose.
    */
   public Pose2d getPose() {
-    return m_odometry.getPoseMeters();
+    return m_odometry.getEstimatedPosition();
   }
 
   // simple version, without gyro reference

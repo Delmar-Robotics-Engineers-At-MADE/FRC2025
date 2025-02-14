@@ -41,8 +41,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
  */
 public class RobotContainer {
   // The robot's subsystems
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem();
   private final PhotonVisionSensor m_photon = new PhotonVisionSensor();
+  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_photon);
 
   // The driver's controller
   /* XboxController */ GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
