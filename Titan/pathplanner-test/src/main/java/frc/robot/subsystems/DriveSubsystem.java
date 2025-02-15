@@ -24,6 +24,7 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.Constants.AutoConstants;
@@ -177,7 +178,12 @@ public class DriveSubsystem extends SubsystemBase {
 
   public void resetOdometryToVision (PhotonVisionSensor vision) {
     m_odometry.update(m_gyro.getRotation2d(), getCurrentPositions());
-    resetPose(vision.getLatestEstimatedPose(getPose()).estimatedPose.toPose2d());
+    EstimatedRobotPose pose = vision.getLatestEstimatedPose(getPose());
+    while (pose.timestampSeconds == 0 || Timer.getTimestamp() - pose.timestampSeconds > 0.5) {
+      // keep trying until we get a frest post estimate
+      pose = vision.getLatestEstimatedPose(getPose());
+    }
+    resetPose(pose.estimatedPose.toPose2d());
   }
 
   @Override
