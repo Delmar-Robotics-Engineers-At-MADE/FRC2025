@@ -92,9 +92,6 @@ public class RobotContainer {
     new JoystickButton(m_driverController, 2) // thumb button on flight controller
         .whileTrue(new RunCommand(() -> m_robotDrive.resetOdometryToVision(m_photon), m_robotDrive, m_photon));
 
-    new JoystickButton(m_driverController, 3) // thumb button on flight controller
-        .whileTrue(getAutonomousCommand());
-
   }
 
   
@@ -125,8 +122,8 @@ public class RobotContainer {
         AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-    Command resetPoseCommand = new InstantCommand(() -> 
-        m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose()));
+    // Command resetPoseCommand = new InstantCommand(() -> 
+    //     m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose()));
 
     SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
         exampleTrajectory,
@@ -140,8 +137,7 @@ public class RobotContainer {
         m_robotDrive::setModuleStates,
         m_robotDrive);
 
-    Command myCmd = resetPoseCommand
-        .andThen(m_robotDrive.setTrajectoryToCollectorCmd(m_photon))
+    Command myCmd = (m_robotDrive.setTrajectoryToProcessorCmd(m_photon))
         .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
         .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 
