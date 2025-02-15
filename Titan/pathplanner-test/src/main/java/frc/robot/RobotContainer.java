@@ -103,6 +103,9 @@ public class RobotContainer {
             .andThen(() -> m_robotDrive.drive(0, 0, 0, false))
         );
 
+    new JoystickButton(m_driverController, 4) // thumb button on flight controller
+        .whileTrue(m_robotDrive.setXCommand());
+
   }
 
   

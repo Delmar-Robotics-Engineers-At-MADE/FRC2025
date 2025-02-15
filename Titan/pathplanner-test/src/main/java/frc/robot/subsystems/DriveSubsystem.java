@@ -139,12 +139,12 @@ public class DriveSubsystem extends SubsystemBase {
     // Configure AutoBuilder last
     AutoBuilder.configure(
             this::getPose, // Robot pose supplier
-            this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+            this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
             this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
             (speeds, feedforwards) -> driveRobotRelative(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
             new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
-                    new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-                    new PIDConstants(1.0, 0.0, 0.0) // Rotation PID constants
+                    new PIDConstants(1.0, 0.0, 0.0), // Translation PID constants
+                    new PIDConstants(0.5, 0.0, 0.0) // Rotation PID constants
             ),
             config, // The robot configuration
             () -> {
@@ -183,7 +183,7 @@ public class DriveSubsystem extends SubsystemBase {
       // keep trying until we get a frest post estimate
       pose = vision.getLatestEstimatedPose(getPose());
     }
-    resetPose(pose.estimatedPose.toPose2d());
+    resetOdometry(pose.estimatedPose.toPose2d()); // was resetPose
   }
 
   @Override
@@ -214,9 +214,10 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   // simple version, without gyro reference
-  public void resetPose (Pose2d pose) {
-    m_odometry.resetPose(pose);
-  }
+  // important to call the version with gyro, since that calculates the offset from gyro to pose
+  // public void resetPose (Pose2d pose) {
+  //   m_odometry.resetPose(pose);
+  // }
 
   private SwerveModuleState[] getModuleStates() {
     return new SwerveModuleState[] {
