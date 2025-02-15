@@ -177,7 +177,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   public void resetOdometryToVision (PhotonVisionSensor vision) {
     m_odometry.update(m_gyro.getRotation2d(), getCurrentPositions());
-    resetPose(vision.getLatestEstimatedPose(getPose()));
+    resetPose(vision.getLatestEstimatedPose(getPose()).estimatedPose.toPose2d());
   }
 
   @Override

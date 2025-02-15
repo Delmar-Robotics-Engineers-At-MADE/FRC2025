@@ -19,6 +19,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.StateSpaceUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -41,7 +42,7 @@ public final class PhotonVisionSensor extends SubsystemBase {
   static AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);    
   static PhotonPoseEstimator photonPoseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam);
 
-  private Pose2d m_latestEstimatedPose = new Pose2d(0,0,new Rotation2d(0));
+  private EstimatedRobotPose m_latestEstimatedPose = new EstimatedRobotPose(new Pose3d(0,0,0,new Rotation3d(0,0,0)), 0,null, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
 
   public PhotonVisionSensor() {
     // constructor
@@ -110,16 +111,17 @@ public final class PhotonVisionSensor extends SubsystemBase {
     return result;
   }
 
-  Pose2d getLatestEstimatedPose (Pose2d prevEstimatedRobotPose) {
+  EstimatedRobotPose getLatestEstimatedPose (Pose2d prevEstimatedRobotPose) {
     Optional<EstimatedRobotPose> poseOption = getEstimatedGlobalPose(prevEstimatedRobotPose);
     if (poseOption.isPresent()) {
-      m_latestEstimatedPose = poseOption.get().estimatedPose.toPose2d();
+      EstimatedRobotPose pose = poseOption.get();
+      m_latestEstimatedPose = pose;
     }
     return m_latestEstimatedPose;
   }
 
-  public double getPoseX(){return m_latestEstimatedPose.getX();}
-  public double getPoseY(){return m_latestEstimatedPose.getY();}
-  String getPoseRot () {return m_latestEstimatedPose.getRotation().toString();}
+  public double getPoseX(){return m_latestEstimatedPose.estimatedPose.toPose2d().getX();}
+  public double getPoseY(){return m_latestEstimatedPose.estimatedPose.toPose2d().getY();}
+  String getPoseRot () {return m_latestEstimatedPose.estimatedPose.toPose2d().getRotation().toString();}
 
 }
