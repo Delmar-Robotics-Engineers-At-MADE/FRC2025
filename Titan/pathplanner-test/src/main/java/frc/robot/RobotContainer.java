@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import java.util.List;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -70,6 +71,9 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(m_driverController.getRawAxis(2)/4, OIConstants.kDriveDeadband*2), // getRightX()
                 true),
             m_robotDrive));
+
+    // register named commands for pathplanner
+    NamedCommands.registerCommand("initiateX", m_robotDrive.setXCommand());
   }
 
   /**
@@ -148,6 +152,6 @@ public class RobotContainer {
         .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
         .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 
-    return myCmd; /* m_autoChooser.getSelected(); */
+    return /* myCmd;*/ m_autoChooser.getSelected();
   }
 }

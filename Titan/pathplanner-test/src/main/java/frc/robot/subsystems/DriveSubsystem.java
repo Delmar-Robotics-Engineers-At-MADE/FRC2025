@@ -373,5 +373,9 @@ public class DriveSubsystem extends SubsystemBase {
     return m_trajectoryForTeleop;
   }
 
+  public Command setXCommand() {
+    return new InstantCommand(() -> setX());
+  }
+
 
 }
