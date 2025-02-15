@@ -92,6 +92,13 @@ public class RobotContainer {
     new JoystickButton(m_driverController, 2) // thumb button on flight controller
         .whileTrue(new RunCommand(() -> m_robotDrive.resetOdometryToVision(m_photon), m_robotDrive, m_photon));
 
+    new JoystickButton(m_driverController, 3) // button on flight controller
+        .whileTrue(
+            m_robotDrive.setTrajectoryToProcessorCmd(m_photon)
+            .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
+            .andThen(() -> m_robotDrive.drive(0, 0, 0, false))
+        );
+
   }
 
   
@@ -137,7 +144,7 @@ public class RobotContainer {
         m_robotDrive::setModuleStates,
         m_robotDrive);
 
-    Command myCmd = (m_robotDrive.setTrajectoryToProcessorCmd(m_photon))
+    Command myCmd = m_robotDrive.setTrajectoryToProcessorCmd(m_photon)
         .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
         .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 
