@@ -34,6 +34,7 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.commands.MySwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.List;
@@ -376,6 +377,9 @@ public class DriveSubsystem extends SubsystemBase {
 
   public Command setXCommand() {
     return new InstantCommand(() -> setX());
+  }
+  public Command setXCommandHold() {
+    return new RunCommand(() -> setX());
   }
 
 
