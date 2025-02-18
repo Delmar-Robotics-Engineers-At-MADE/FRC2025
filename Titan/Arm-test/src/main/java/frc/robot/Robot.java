@@ -1,7 +1,14 @@
-package frc.robot.subsystems;
+/*----------------------------------------------------------------------------*/
+/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
+/* Open Source Software - may be modified and shared by FRC teams. The code   */
+/* must be accompanied by the FIRST BSD license file in the root directory of */
+/* the project.                                                               */
+/*----------------------------------------------------------------------------*/
 
+package frc.robot;
+
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -14,18 +21,18 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
-public class Arm extends SubsystemBase {
+public class Robot extends TimedRobot {
   private SparkMax motor;
   private SparkMaxConfig motorConfig;
   private SparkClosedLoopController closedLoopController;
   private RelativeEncoder encoder;
 
-  public Arm() {
+  public Robot() {
     /*
      * Initialize the SPARK MAX and get its encoder and closed loop controller
      * objects for later use.
      */
-    motor = new SparkMax(1, MotorType.kBrushless);
+    motor = new SparkMax(15, MotorType.kBrushless);
     closedLoopController = motor.getClosedLoopController();
     encoder = motor.getEncoder();
 
@@ -89,39 +96,43 @@ public class Arm extends SubsystemBase {
 
     // Initialize dashboard values
     SmartDashboard.setDefaultNumber("Target Position", 0);
-    SmartDashboard.setDefaultNumber("Target Velocity", 0);
-    SmartDashboard.setDefaultBoolean("Control Mode", false);
+    SmartDashboard.setDefaultNumber("kFF", 0);
+    // SmartDashboard.setDefaultNumber("Target Velocity", 0);
+    // SmartDashboard.setDefaultBoolean("Control Mode V", false);
     SmartDashboard.setDefaultBoolean("Reset Encoder", false);
   }
 
   @Override
   public void teleopPeriodic() {
-    if (SmartDashboard.getBoolean("Control Mode", false)) {
+    // if (SmartDashboard.getBoolean("Control Mode V", false)) {
       /*
        * Get the target velocity from SmartDashboard and set it as the setpoint
        * for the closed loop controller with MAXMotionVelocityControl as the
        * control type.
        */
-      double targetVelocity = SmartDashboard.getNumber("Target Velocity", 0);
-      closedLoopController.setReference(targetVelocity, ControlType.kMAXMotionVelocityControl,
-          ClosedLoopSlot.kSlot1);
-    } else {
+    //   double targetVelocity = SmartDashboard.getNumber("Target Velocity", 0);
+    //   closedLoopController.setReference(targetVelocity, ControlType.kMAXMotionVelocityControl,
+    //       ClosedLoopSlot.kSlot1);
+    // } else {
       /*
        * Get the target position from SmartDashboard and set it as the setpoint
        * for the closed loop controller with MAXMotionPositionControl as the
        * control type.
        */
       double targetPosition = SmartDashboard.getNumber("Target Position", 0);
+      double kFF = SmartDashboard.getNumber("kFF", 0);
+      double angle = 0;  // calculate angle in rads
+      double feedForward = kFF * Math.cos(angle);
       closedLoopController.setReference(targetPosition, ControlType.kMAXMotionPositionControl,
-          ClosedLoopSlot.kSlot0);
-    }
+          ClosedLoopSlot.kSlot0, feedForward);
+    // }
   }
 
   @Override
   public void robotPeriodic() {
     // Display encoder position and velocity
     SmartDashboard.putNumber("Actual Position", encoder.getPosition());
-    SmartDashboard.putNumber("Actual Velocity", encoder.getVelocity());
+    // SmartDashboard.putNumber("Actual Velocity", encoder.getVelocity());
 
     if (SmartDashboard.getBoolean("Reset Encoder", false)) {
       SmartDashboard.putBoolean("Reset Encoder", false);
