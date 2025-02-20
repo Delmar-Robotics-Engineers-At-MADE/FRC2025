@@ -49,8 +49,8 @@ public class Robot extends TimedRobot {
      * factors.
      */
     motorConfig.encoder
-        .positionConversionFactor(1) 
-        .velocityConversionFactor(1);
+        .positionConversionFactor(360/4) // everything is degrees of arm rotation
+        .velocityConversionFactor(360/4);
 
     /*
      * Configure the closed loop controller. We want to make sure we set the
@@ -60,7 +60,7 @@ public class Robot extends TimedRobot {
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(0.5)
+        .p(0.005)
         .i(0)
         .d(0)
         .outputRange(-1, 1)
@@ -68,19 +68,19 @@ public class Robot extends TimedRobot {
         .p(0.0001, ClosedLoopSlot.kSlot1)
         .i(0, ClosedLoopSlot.kSlot1)
         .d(0, ClosedLoopSlot.kSlot1)
-        .velocityFF(1.0 / 5767, ClosedLoopSlot.kSlot1)
+        .velocityFF(1.0 / 57.67, ClosedLoopSlot.kSlot1)
         .outputRange(-1, 1, ClosedLoopSlot.kSlot1);
 
     motorConfig.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass
         // a closed loop slot, as it will default to slot 0.
-        .maxVelocity(1000)
-        .maxAcceleration(1000)
-        .allowedClosedLoopError(40/360) // 20 deg motor, or 5 degrees arm
+        .maxVelocity(1000000)
+        .maxAcceleration(1000000)
+        .allowedClosedLoopError(10) 
         // Set MAXMotion parameters for velocity control in slot 1
-        .maxAcceleration(500, ClosedLoopSlot.kSlot1)
-        .maxVelocity(6000, ClosedLoopSlot.kSlot1)
-        .allowedClosedLoopError(1, ClosedLoopSlot.kSlot1);
+        .maxAcceleration(1000000, ClosedLoopSlot.kSlot1)
+        .maxVelocity(1000000, ClosedLoopSlot.kSlot1)
+        .allowedClosedLoopError(10, ClosedLoopSlot.kSlot1);
 
     /*
      * Apply the configuration to the SPARK MAX.
