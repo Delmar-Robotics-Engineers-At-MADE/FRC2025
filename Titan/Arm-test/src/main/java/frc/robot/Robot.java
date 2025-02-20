@@ -49,7 +49,7 @@ public class Robot extends TimedRobot {
      * factors.
      */
     motorConfig.encoder
-        .positionConversionFactor(1)
+        .positionConversionFactor(1) 
         .velocityConversionFactor(1);
 
     /*
@@ -60,7 +60,7 @@ public class Robot extends TimedRobot {
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(0.4)
+        .p(0.5)
         .i(0)
         .d(0)
         .outputRange(-1, 1)
@@ -76,7 +76,7 @@ public class Robot extends TimedRobot {
         // a closed loop slot, as it will default to slot 0.
         .maxVelocity(1000)
         .maxAcceleration(1000)
-        .allowedClosedLoopError(1)
+        .allowedClosedLoopError(40/360) // 20 deg motor, or 5 degrees arm
         // Set MAXMotion parameters for velocity control in slot 1
         .maxAcceleration(500, ClosedLoopSlot.kSlot1)
         .maxVelocity(6000, ClosedLoopSlot.kSlot1)
@@ -120,6 +120,7 @@ public class Robot extends TimedRobot {
        * control type.
        */
       double targetPosition = SmartDashboard.getNumber("Target Position", 0);
+      SmartDashboard.putNumber("Target Position 2", targetPosition);
       double kFF = SmartDashboard.getNumber("kFF", 0);
       double angle = 0;  // calculate angle in rads
       double feedForward = kFF * Math.cos(angle);
