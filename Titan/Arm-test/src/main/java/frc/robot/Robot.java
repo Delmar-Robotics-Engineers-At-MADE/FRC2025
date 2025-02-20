@@ -122,8 +122,8 @@ public class Robot extends TimedRobot {
       double targetPosition = SmartDashboard.getNumber("Target Position", 0);
       SmartDashboard.putNumber("Target Position 2", targetPosition);
       double kFF = SmartDashboard.getNumber("kFF", 0);
-      double angle = 0;  // calculate angle in rads
-      double feedForward = kFF * Math.cos(angle);
+      double angle = Math.toRadians(encoder.getPosition());  // calculate angle in rads
+      double feedForward = kFF * Math.sin(angle);
       closedLoopController.setReference(targetPosition, ControlType.kMAXMotionPositionControl,
           ClosedLoopSlot.kSlot0, feedForward);
     // }
