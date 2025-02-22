@@ -98,7 +98,7 @@ public class RobotContainer {
 
     new JoystickButton(m_driverController, 3) // button on flight controller
         .whileTrue(
-            m_robotDrive.setTrajectoryToProcessorCmd(m_photon)
+            m_robotDrive.setTrajectoryToAprilTargetCmd(6, m_photon)
             .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
             .andThen(() -> m_robotDrive.drive(0, 0, 0, false))
         );

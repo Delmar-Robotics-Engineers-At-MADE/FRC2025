@@ -354,9 +354,29 @@ public class DriveSubsystem extends SubsystemBase {
         m_trajectoryConfigForTeleop);
         
   }
-     
+
+  public void setTrajectoryToAprilTarget(int id, PhotonVisionSensor photon) {
+    //resetOdometryToVision(photon);
+    double targetX = 0.0; double targetY = 0.0; double rot = 0.0;
+    switch (id) {
+      case 6: // reef
+        targetX = 14.0; targetY = 2.6; rot = Math.toRadians(120);
+        break;
+    }
+    Pose2d currentPose = getPose();
+    m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
+        currentPose,
+        List.of(),
+        new Pose2d(targetX, targetY, new Rotation2d(rot)),
+        m_trajectoryConfigForTeleop);
+        
+  }
+  
   public Command setTrajectoryToProcessorCmd(PhotonVisionSensor photon) {
     return new InstantCommand(() -> setTrajectoryToProcessor(photon));
+  }
+  public Command setTrajectoryToAprilTargetCmd(int id, PhotonVisionSensor photon) {
+    return new InstantCommand(() -> setTrajectoryToAprilTarget(id, photon));
   }
 
   public Command getSwerveControllerCmdForTeleop(PhotonVisionSensor photon) {

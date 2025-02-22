@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
+import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.DriveSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -36,9 +37,14 @@ import java.util.List;
 public class RobotContainer {
   // The robot's subsystems
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
+  private final Blinkin m_blinkin = new Blinkin();
 
   // The driver's controller
   /* XboxController */ GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
+
+  // Operator's controller, for now the new PXN
+  GenericHID m_operatorController = new GenericHID(OIConstants.kOperatorControllerPort);
+
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -76,6 +82,10 @@ public class RobotContainer {
 
     new JoystickButton(m_driverController, 1) // red B on logitech, thumb button on flight controller
         .whileTrue(new RunCommand(() -> m_robotDrive.zeroHeading(),m_robotDrive));
+
+    new JoystickButton(m_operatorController, 3) 
+        .onTrue(m_blinkin.greenCmd())
+        .onFalse(m_blinkin.setAllianceColorCmd());
 
   }
 
@@ -125,4 +135,8 @@ public class RobotContainer {
     // Run path following command, then stop at the end.
     return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
   }
+
+  public Blinkin getBlinkin() {
+    return m_blinkin;
+  }  
 }
