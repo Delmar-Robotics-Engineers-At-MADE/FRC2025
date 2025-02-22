@@ -181,7 +181,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_odometry.update(m_gyro.getRotation2d(), getCurrentPositions());
     EstimatedRobotPose pose = vision.getLatestEstimatedPose(getPose());
     while (pose.timestampSeconds == 0 || Timer.getTimestamp() - pose.timestampSeconds > 0.5) {
-      // keep trying until we get a frest post estimate
+      // keep trying until we get a fresh pose estimate
       pose = vision.getLatestEstimatedPose(getPose());
     }
     resetOdometry(pose.estimatedPose.toPose2d()); // was resetPose

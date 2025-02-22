@@ -48,6 +48,9 @@ public class RobotContainer {
   // The driver's controller
   /* XboxController */ GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
 
+  // Operator's controller, for now the new PXN
+  GenericHID m_buttonPad = new GenericHID(OIConstants.kButtonPadPort);
+
   private final SendableChooser<Command> m_autoChooser;
 
   /**
@@ -96,7 +99,7 @@ public class RobotContainer {
     new JoystickButton(m_driverController, 2) // thumb button on flight controller
         .whileTrue(new RunCommand(() -> m_robotDrive.resetOdometryToVision(m_photon), m_robotDrive, m_photon));
 
-    new JoystickButton(m_driverController, 3) // button on flight controller
+    new JoystickButton(m_buttonPad, 3) 
         .whileTrue(
             m_robotDrive.setTrajectoryToAprilTargetCmd(6, m_photon)
             .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
