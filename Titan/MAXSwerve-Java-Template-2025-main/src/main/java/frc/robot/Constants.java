@@ -53,59 +53,6 @@ public final class Constants {
 
     public static final boolean kGyroReversed = true;
 
-    // public static final double kYawP = 0.03;
-    // public static final double kYawI = 0.0;
-    // public static final double kYawD = 0.0;
-    // public static final double kMaxYawRateDegPerS = 8;
-    // public static final double kMaxYawAccelerationDegPerSSquared = 20;
-    // public static final double kYawToleranceDeg = 5;
-    // public static final double kYawRateToleranceDegPerS = 10;
-    // public static final double kLongToleranceMeter = 0.1;
-    // public static final double kLatToleranceMeter = 0.1;
-
-    // // react to April Tag yaw
-    // public static final double kYawAprilP = 0.3;
-    // public static final double kYawAprilI = 0;
-    // public static final double kYawAprilD = 0.05;  
-    // public static final double kYawAprilZero = 0.0; // 1.2;
-    
-    // // react to Limelight yaw
-    // public static final double kYawLimeP = 0.04;
-    // public static final double kYawLimeI = 0;
-    // public static final double kYawLimeD = 0.001;  
-    // public static final double kTurnToleranceLime = .1;
-    // public static final double kTurnRateToleranceLimesPerS = 1; // meters (X of photon view) per second
-    
-    // // react to April Tag skew
-    // public static final double kSkewAprilP = 0.5;
-    // public static final double kSkewAprilI = 0.008;
-    // public static final double kSkewAprilD = 0.01;  
-    // public static final double kSkewAprilZero = Math.PI;  
-
-    // // distance to April Tag
-    // public static final double kDriveAprilP = .8;
-    // public static final double kDriveAprilI = 0.0;
-    // public static final double kDriveAprilD = 0.1;
-    // public static final double kDriveAprilToleranceDist = 0.2;  // in meters
-    // public static final double kMaxMetersPerS = 100;  // we don't really need this to be profiled, so set high number
-    // public static final double kMaxMetersPerSSquared = 100;
-    // public static final double kDriveAprilTarget = 2;
-    
-    // turn rate limits, only meaningful when error measurement is angle
-    // public static final double kMaxTurnRateDegPerS = 180;
-    // public static final double kMaxTurnAccelerationDegPerSSquared = 300;
-    // public static final double kTurnToleranceDeg = 2;
-    // public static final double kTurnRateToleranceDegPerS = 10; // degrees per second
-
-    // public static final double kMaxTurnRateRadPerS = 2 * Math.PI;
-    // public static final double kMaxTurnAccelerationRadPerSSquared = 2 * Math.PI;
-    // public static final double kTurnToleranceRad = Math.PI/60;
-    // public static final double kTurnRateToleranceRadPerS = Math.PI/2; // degrees per second
-
-    // public static final double kMaxTurnRateMPerS = 2;
-    // public static final double kMaxTurnAccelerationMPerSSquared = 4;
-    // public static final double kTurnToleranceM = .1;
-    // public static final double kTurnRateToleranceMPerS = 1; // meters (X of photon view) per second
   }
 
   public static final class ModuleConstants {
@@ -117,6 +64,7 @@ public final class Constants {
     // Invert the turning encoder, since the output shaft rotates in the opposite direction of
     // the steering motor in the MAXSwerve Module.
     // public static final boolean kTurningEncoderInverted = true;
+    //       The above is done now in the Rev Hardware Client when zeroing the encoder
 
     // Calculations required for driving motor conversion factors and feed forward
     public static final double kDrivingMotorFreeSpeedRps = NeoMotorConstants.kFreeSpeedRpm / 60;
@@ -127,17 +75,6 @@ public final class Constants {
     public static final double kDriveWheelFreeSpeedRps = (kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters)
         / kDrivingMotorReduction;
 
-    // public static final double kDrivingEncoderPositionFactor = (kWheelDiameterMeters * Math.PI)
-    //     / kDrivingMotorReduction; // meters
-    // public static final double kDrivingEncoderVelocityFactor = ((kWheelDiameterMeters * Math.PI)
-    //     / kDrivingMotorReduction) / 60.0; // meters per second
-
-    // public static final double kTurningEncoderPositionFactor = (2 * Math.PI); // radians
-    // public static final double kTurningEncoderVelocityFactor = (2 * Math.PI) / 60.0; // radians per second
-
-    // public static final double kTurningEncoderPositionPIDMinInput = 0; // radians
-    // public static final double kTurningEncoderPositionPIDMaxInput = kTurningEncoderPositionFactor; // radians
-
     // These are in Configs.java now, was...
     // public static final double kDrivingP = 0.04;
     // public static final double kDrivingI = 0;
@@ -145,16 +82,6 @@ public final class Constants {
     // public static final double kDrivingFF = 1 / kDriveWheelFreeSpeedRps;
     // public static final double kDrivingMinOutput = -1;
     // public static final double kDrivingMaxOutput = 1;
-
-    // public static final double kTurningP = 1;
-    // public static final double kTurningI = 0;
-    // public static final double kTurningD = 0;
-    // public static final double kTurningFF = 0;
-    // public static final double kTurningMinOutput = -1;
-    // public static final double kTurningMaxOutput = 1;
-
-    // public static final int kDrivingMotorCurrentLimit = 50; // amps
-    // public static final int kTurningMotorCurrentLimit = 20; // amps
   }
 
   public static final class OIConstants {
