@@ -119,11 +119,11 @@ public final class Constants {
     public static final double kTurnRateToleranceMPerS = 1; // meters (X of photon view) per second
   }
 
-  public static final class PIDDriveConstants {
-    public static final double latGoal = 0;
-    public static final double longGoal = 0;
-    public static final double yawGoal = 0;
-  }
+  // public static final class PIDDriveConstants {
+  //   public static final double latGoal = 0;
+  //   public static final double longGoal = 0;
+  //   public static final double yawGoal = 0;
+  // }
   public static final class ModuleConstants {
     // The MAXSwerve module can be configured with one of three pinion gears: 12T, 13T, or 14T.
     // This changes the drive speed of the module (a pinion gear with more teeth will result in a
@@ -157,7 +157,7 @@ public final class Constants {
     public static final double kDrivingP = 0.04;
     public static final double kDrivingI = 0;
     public static final double kDrivingD = 0;
-    public static final double kDrivingFF = 1 / kDriveWheelFreeSpeedRps;
+    // public static final double kDrivingFF = 1 / kDriveWheelFreeSpeedRps;
     public static final double kDrivingMinOutput = -1;
     public static final double kDrivingMaxOutput = 1;
 
@@ -201,173 +201,173 @@ public final class Constants {
     public static final double kFreeSpeedRpm = 5676;
   }
 
-  public static final class ShooterConstants {
-    public static final int kTopID = 8;
-    public static final int kBottomID = 9;
+  // public static final class ShooterConstants {
+  //   public static final int kTopID = 8;
+  //   public static final int kBottomID = 9;
 
-    // init v should be 6.7 m/s for subwoofer at intake pos
-    public static final double kSubwooferSpeed = 1340;
+  //   // init v should be 6.7 m/s for subwoofer at intake pos
+  //   public static final double kSubwooferSpeed = 1340;
 
-    // init v should be 8.2 m/s
-    public static final double k3mSpeed = 1395;
-    public static final double kAngleSpeed = 1500;
+  //   // init v should be 8.2 m/s
+  //   public static final double k3mSpeed = 1395;
+  //   public static final double kAngleSpeed = 1500;
 
-    public static final double kCompenstion = 1.6;
+  //   public static final double kCompenstion = 1.6;
 
-    public static final double kIdleSpeed = 700;
-    public static final double kAmpSpeed = 900;
-    public static final double kShuttleSpeed = 2500;
-    public static final double kP = /*0.00025*/ 0;
-    public static final double kI = 0.0;
-    public static final double kD = /*0.000077*/ 0;
-    public static final double kFF = 0.00017;
-    public static final double kIz = 0;
-    public static final double kMinOutput = -1;
-    public static final double kMaxOutput = 1;
-    public static final double kMaxRPM = 5676;
-    public static final double kLaunchTime = 2;
-    public static final double kThermalLimit = 48;
-    public static final double kTolerance = 80;
-  }
+  //   public static final double kIdleSpeed = 700;
+  //   public static final double kAmpSpeed = 900;
+  //   public static final double kShuttleSpeed = 2500;
+  //   public static final double kP = /*0.00025*/ 0;
+  //   public static final double kI = 0.0;
+  //   public static final double kD = /*0.000077*/ 0;
+  //   public static final double kFF = 0.00017;
+  //   public static final double kIz = 0;
+  //   public static final double kMinOutput = -1;
+  //   public static final double kMaxOutput = 1;
+  //   public static final double kMaxRPM = 5676;
+  //   public static final double kLaunchTime = 2;
+  //   public static final double kThermalLimit = 48;
+  //   public static final double kTolerance = 80;
+  // }
 
-  public static final class IntakeConstants {
-    public static final int kIntakeID = 10;
-    public static final int kStarboardSensorDIOPort = 0;
-    public static final int kPortSensorDIOPort = 1;
-    public static final double kIntakeSpeed = 2500;
-    public static final double kIntakeCaptureSpeed = 2100;
+  // public static final class IntakeConstants {
+  //   public static final int kIntakeID = 10;
+  //   public static final int kStarboardSensorDIOPort = 0;
+  //   public static final int kPortSensorDIOPort = 1;
+  //   public static final double kIntakeSpeed = 2500;
+  //   public static final double kIntakeCaptureSpeed = 2100;
 
-    public static final double kFeedSpeed = 3083;
-    public static final double kReverseSpeed = 0.8;
-    public static final double kCompenstion = 1.83;
+  //   public static final double kFeedSpeed = 3083;
+  //   public static final double kReverseSpeed = 0.8;
+  //   public static final double kCompenstion = 1.83;
 
-    public static final double kP = 0.01;
-    public static final double kI = 0.0;
-    public static final double kD = 0.0;
-    public static final double kFF = 0.02;
-    public static final double kIz = 0;
-    public static final double kS = 0;
-    public static final double kV = 2;
-    public static final double kMinOutput = -1;
-    public static final double kMaxOutput = 1;
-    public static final double kMaxRPM = 11000;
-    public static final double kVelTolerance = 400;
+  //   public static final double kP = 0.01;
+  //   public static final double kI = 0.0;
+  //   public static final double kD = 0.0;
+  //   public static final double kFF = 0.02;
+  //   public static final double kIz = 0;
+  //   public static final double kS = 0;
+  //   public static final double kV = 2;
+  //   public static final double kMinOutput = -1;
+  //   public static final double kMaxOutput = 1;
+  //   public static final double kMaxRPM = 11000;
+  //   public static final double kVelTolerance = 400;
 
-    public static final double kpP = 0.05;
-    public static final double kpI = 0.0;
-    public static final double kpD = 0.0;
-    public static final double kpFF = 0;
-  }
+  //   public static final double kpP = 0.05;
+  //   public static final double kpI = 0.0;
+  //   public static final double kpD = 0.0;
+  //   public static final double kpFF = 0;
+  // }
 
-  public static final class ArmConstants {
-    public static final int kLeftID = 6;
-    public static final int kRightID = 7;
-    public static final double kStowPos = 0.26;
-    public static final double kDefaultPos = 0.04;
-    // intake go lower
-    public static final double kIntakePos = 0.0232;
-    public static final double kSubwooferPos = 0.04;
-    public static final double kAnglePos = 0.06;
+  // public static final class ArmConstants {
+  //   public static final int kLeftID = 6;
+  //   public static final int kRightID = 7;
+  //   public static final double kStowPos = 0.26;
+  //   public static final double kDefaultPos = 0.04;
+  //   // intake go lower
+  //   public static final double kIntakePos = 0.0232;
+  //   public static final double kSubwooferPos = 0.04;
+  //   public static final double kAnglePos = 0.06;
 
-    public static final double kFrontAmpPos = 0.18;
+  //   public static final double kFrontAmpPos = 0.18;
 
-    // 3m position
-    public static final double k3mPos = 0.064;
+  //   // 3m position
+  //   public static final double k3mPos = 0.064;
 
-    public static final double kShuttlePos = 0.07;
-    public static final double kBackAmpPos = 0.265;
-    public static final double kUpperLimit = 0.35;
-    public static final double kLowerLimit = 0.023;
-    public static final double kOverrunLimit = 0;
+  //   public static final double kShuttlePos = 0.07;
+  //   public static final double kBackAmpPos = 0.265;
+  //   public static final double kUpperLimit = 0.35;
+  //   public static final double kLowerLimit = 0.023;
+  //   public static final double kOverrunLimit = 0;
 
-    public static final double kP = 6; 
-    public static final double kI = 0;
-    public static final double kD = 0.7; 
-    public static final double kIz = 0; 
-    public static final double kFF = 0; 
-    public static final double kMaxOutput = 0.7; 
-    public static final double kMinOutput = -0.7;
-    public static final double kMaxAccel = 0.18;
-    public static final double kMaxVel = 0.85;
+  //   public static final double kP = 6; 
+  //   public static final double kI = 0;
+  //   public static final double kD = 0.7; 
+  //   public static final double kIz = 0; 
+  //   public static final double kFF = 0; 
+  //   public static final double kMaxOutput = 0.7; 
+  //   public static final double kMinOutput = -0.7;
+  //   public static final double kMaxAccel = 0.18;
+  //   public static final double kMaxVel = 0.85;
 
-    public static final double kTolearance = 0.002;
-    public static final double kManualSpeed = 0.3;
+  //   public static final double kTolearance = 0.002;
+  //   public static final double kManualSpeed = 0.3;
 
-    public static final double kSVolts = 0;
-    public static final double kGVolts = 0.33;
-    public static final double kVVoltSecondPerRad = 6.24;
-    public static final double kAVoltSecondSquaredPerRad = 0.04;
-  }
+  //   public static final double kSVolts = 0;
+  //   public static final double kGVolts = 0.33;
+  //   public static final double kVVoltSecondPerRad = 6.24;
+  //   public static final double kAVoltSecondSquaredPerRad = 0.04;
+  // }
 
-  public static final class ClimberConstants {
-    public static final int kPortID = 15;
-    public static final int kStarboardID = 16;
-    public static final int kPortDIO = 3;
-    public static final int kStarboardDIO = 2;
-    public static final double kP = 0.015; 
-    public static final double kI = 0;
-    public static final double kD = 0; 
-    public static final double kIz = 0; 
-    public static final double kFF = 0; 
-    public static final double kMaxOutput = 1; 
-    public static final double kMinOutput = -1;
+  // public static final class ClimberConstants {
+  //   public static final int kPortID = 15;
+  //   public static final int kStarboardID = 16;
+  //   public static final int kPortDIO = 3;
+  //   public static final int kStarboardDIO = 2;
+  //   public static final double kP = 0.015; 
+  //   public static final double kI = 0;
+  //   public static final double kD = 0; 
+  //   public static final double kIz = 0; 
+  //   public static final double kFF = 0; 
+  //   public static final double kMaxOutput = 1; 
+  //   public static final double kMinOutput = -1;
 
-    public static final double kHomeSpeed = -0.4;
-    // > 630, < 750
-    public static final double kUpperLimit = 400;
-    public static final double kLowerLimit = 5;
-    public static final double kManualSpeed = 1500;
-    public static final double kDirectSpeed = 0.5;
-    public static final double kTolearance = 5;
+  //   public static final double kHomeSpeed = -0.4;
+  //   // > 630, < 750
+  //   public static final double kUpperLimit = 400;
+  //   public static final double kLowerLimit = 5;
+  //   public static final double kManualSpeed = 1500;
+  //   public static final double kDirectSpeed = 0.5;
+  //   public static final double kTolearance = 5;
     
-  }
+  // }
 
   // Cannot remember if the Extreme 3D PRO is 0 index or not.
-  public static final class DriverConstants {
-    public static final double kDefaultSpeed = 0.85;
-    public static final double kYawSpeed = 0.6;
-    public static final double kManoeuvreSpeed = 0.4;
-    public static final double kMYawSpeed = 0.3;
-    public static final int kSetX = 4;
-    public static final int kIntake = 1;
-    public static final int kStowArm = 5;
-    public static final int kAutoIntake = 3; 
-    public static final int kAutoAmp = 6;
-    public static final int kSelfDestruct = 9;
-    public static final int kTurbo = 2;
-  }
+  // public static final class DriverConstants {
+  //   public static final double kDefaultSpeed = 0.85;
+  //   public static final double kYawSpeed = 0.6;
+  //   public static final double kManoeuvreSpeed = 0.4;
+  //   public static final double kMYawSpeed = 0.3;
+  //   public static final int kSetX = 4;
+  //   public static final int kIntake = 1;
+  //   public static final int kStowArm = 5;
+  //   public static final int kAutoIntake = 3; 
+  //   public static final int kAutoAmp = 6;
+  //   public static final int kSelfDestruct = 9;
+  //   public static final int kTurbo = 2;
+  // }
 
-  public static final class VisionConstants {
-    public static final double kObjCamXOffset = 0.3302;
-    public static final double kTagCamXOffset = 0.3302;
-    public static final double kTagCamYOffset = 0.254;
-  }
+  // public static final class VisionConstants {
+  //   public static final double kObjCamXOffset = 0.3302;
+  //   public static final double kTagCamXOffset = 0.3302;
+  //   public static final double kTagCamYOffset = 0.254;
+  // }
 
-  public enum AprilTags {
-    SUBSTATION_CLOSE,
-    SUBSTATION_FAR,
-    SPEAKER_CENTRE,
-    SPEAKER_OFFSET,
-    AMP,
-    STAGE_LEFT,
-    STAGE_RIGHT,
-    STAGE_FAR
-  }
+  // public enum AprilTags {
+  //   SUBSTATION_CLOSE,
+  //   SUBSTATION_FAR,
+  //   SPEAKER_CENTRE,
+  //   SPEAKER_OFFSET,
+  //   AMP,
+  //   STAGE_LEFT,
+  //   STAGE_RIGHT,
+  //   STAGE_FAR
+  // }
 
-  public enum States {
-    STOW,
-    INTAKE,
-    CLOSE,
-    FAR,
-    AMP,
-    CLIMB,
-    DEFEND
-  }
+  // public enum States {
+  //   STOW,
+  //   INTAKE,
+  //   CLOSE,
+  //   FAR,
+  //   AMP,
+  //   CLIMB,
+  //   DEFEND
+  // }
 
-  public static final class FieldConstants {
-    public static final double kSubwooferDepth = 0.917575;
-    public static final double kChainDist = 0.422275;
-  }
+  // public static final class FieldConstants {
+  //   public static final double kSubwooferDepth = 0.917575;
+  //   public static final double kChainDist = 0.422275;
+  // }
 
   public static final class LEDConstants {
     public static final double green = 0.77;
@@ -377,9 +377,9 @@ public final class Constants {
     public static final double grey = -0.33;
   }
 
-  public enum Types {
-    AMP,
-    SPEAKER,
-    SHUTTLE
-  }
+  // public enum Types {
+  //   AMP,
+  //   SPEAKER,
+  //   SHUTTLE
+  // }
 }
