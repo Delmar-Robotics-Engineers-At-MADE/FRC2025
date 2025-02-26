@@ -7,17 +7,40 @@ package frc.robot.subsystems;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import frc.robot.Constants.AutoConstants;
 // import edu.wpi.first.wpilibj.ADIS16470_IMU;
 // import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.commands.MySwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.photonvision.EstimatedRobotPose;
 
 import com.kauailabs.navx.frc.AHRS;
 
@@ -46,34 +69,136 @@ public class DriveSubsystem extends SubsystemBase {
   // The gyro sensor
   private final AHRS m_gyro = new AHRS();
 
+  // photon vision subsystem
+  PhotonVisionSensor m_photon = null;
+
   // Odometry class for tracking robot pose
-  SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
+  SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(m_gyro.getAngle()),
+      Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
           m_rearLeft.getPosition(),
-          m_rearRight.getPosition()
-      });
+          m_rearRight.getPosition()},
+          Pose2d.kZero,
+        VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5)),
+        VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(30))
+      );
 
-  /** Creates a new DriveSubsystem. */
-  public DriveSubsystem() {
+  // ********* stuff for following paths in teleop ***********
+
+  private  Trajectory m_trajectoryForTeleop;
+
+  TrajectoryConfig m_trajectoryConfigForTeleop = new TrajectoryConfig(
+      AutoConstants.kMaxSpeedMetersPerSecond/2,
+      AutoConstants.kMaxAccelerationMetersPerSecondSquared)
+      // Add kinematics to ensure max speed is actually obeyed
+      .setKinematics(DriveConstants.kDriveKinematics);
+
+  ProfiledPIDController m_thetaControllerForTeleop = new ProfiledPIDController(
+        AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
+
+  // ************************************************************
+
+
+  ShuffleboardTab m_driveBaseTab;
+
+  private void setupDashboard() {
+    m_driveBaseTab = Shuffleboard.getTab("Drivebase");
+    m_driveBaseTab.add("Gyro", m_gyro);
+    m_driveBaseTab.addDouble("Pose X", () -> getPoseX());
+    m_driveBaseTab.addDouble("Pose Y", () -> getPoseY());
+    m_driveBaseTab.addString("Rotation", () -> getPoseRot());
+  }
+
+  double getPoseX () {return m_odometry.getEstimatedPosition().getX();}
+  double getPoseY () {return m_odometry.getEstimatedPosition().getY();}
+  String getPoseRot () {return m_odometry.getEstimatedPosition().getRotation().toString();}
+
+  Pose2d getEstimatedPosition() {return m_odometry.getEstimatedPosition();}
+
+  /** Creates a new DriveSubsystem. */ // constructor
+  public DriveSubsystem(PhotonVisionSensor photon) {
+    m_photon = photon;
+
     // Usage reporting for MAXSwerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
+
+    // RobotConfig config = null;
+    // try{
+    //   config = RobotConfig.fromGUISettings();
+    // } catch (Exception e) {
+    //   // Handle exception as needed
+    //   e.printStackTrace();
+    // }
+
+    // Configure AutoBuilder last
+    // AutoBuilder.configure(
+    //         this::getPose, // Robot pose supplier
+    //         this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
+    //         this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+    //         (speeds, feedforwards) -> driveRobotRelative(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+    //         new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+    //                 new PIDConstants(1.0, 0.0, 0.0), // Translation PID constants
+    //                 new PIDConstants(0.5, 0.0, 0.0) // Rotation PID constants
+    //         ),
+    //         config, // The robot configuration
+    //         () -> {
+    //           // Boolean supplier that controls when the path will be mirrored for the red alliance
+    //           // This will flip the path being followed to the red side of the field.
+    //           // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+    //           var alliance = DriverStation.getAlliance();
+    //           if (alliance.isPresent()) {
+    //             return alliance.get() == DriverStation.Alliance.Red;
+    //           }
+    //           return false;
+    //         },
+    //         this // Reference to this subsystem to set requirements
+    // );
+
+    setupDashboard();
+
+    m_thetaControllerForTeleop.enableContinuousInput(-Math.PI, Math.PI);
+
+  }
+
+  SwerveModulePosition[] getCurrentPositions() {
+    return new SwerveModulePosition[] {
+      m_frontLeft.getPosition(),
+      m_frontRight.getPosition(),
+      m_rearLeft.getPosition(),
+      m_rearRight.getPosition()
+    };
+  }
+
+  public void resetOdometryToVision (PhotonVisionSensor vision) {
+    m_odometry.update(m_gyro.getRotation2d(), getCurrentPositions());
+    EstimatedRobotPose pose = vision.getLatestEstimatedPose(getPose());
+    while (pose.timestampSeconds == 0 || Timer.getTimestamp() - pose.timestampSeconds > 0.5) {
+      // keep trying until we get a fresh pose estimate
+      pose = vision.getLatestEstimatedPose(getPose());
+    }
+    resetOdometry(pose.estimatedPose.toPose2d()); // was resetPose
   }
 
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
-        new SwerveModulePosition[] {
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_rearLeft.getPosition(),
-            m_rearRight.getPosition()
-        });
+        Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
+        getCurrentPositions());
+
+    // add vision data
+    Optional<EstimatedRobotPose> visionOptional = m_photon.getEstimatedGlobalPose(
+        m_odometry.getEstimatedPosition());
+    if (visionOptional.isPresent()) {
+      EstimatedRobotPose visionPose = visionOptional.get(); 
+      m_odometry.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
+    }
+
+    
   }
 
   /**
@@ -82,17 +207,40 @@ public class DriveSubsystem extends SubsystemBase {
    * @return The pose.
    */
   public Pose2d getPose() {
-    return m_odometry.getPoseMeters();
+    return m_odometry.getEstimatedPosition();
+  }
+
+  // simple version, without gyro reference
+  // important to call the version with gyro, since that calculates the offset from gyro to pose
+  // public void resetPose (Pose2d pose) {
+  //   m_odometry.resetPose(pose);
+  // }
+
+  private SwerveModuleState[] getModuleStates() {
+    return new SwerveModuleState[] {
+            m_frontLeft.getState(),
+            m_frontRight.getState(),
+            m_rearLeft.getState(),
+            m_rearRight.getState()
+    };
+  }
+
+  private ChassisSpeeds getRobotRelativeSpeeds() {
+    return DriveConstants.kDriveKinematics.toChassisSpeeds(getModuleStates());
+  }
+
+  private void driveRobotRelative(ChassisSpeeds speeds) {
+    drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, false);
   }
 
   /**
-   * Resets the odometry to the specified pose.
+   * Resets the odometry to the specified pose, except use gyro.
    *
    * @param pose The pose to which to set the odometry.
    */
   public void resetOdometry(Pose2d pose) {
     m_odometry.resetPosition(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
+        Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -184,4 +332,71 @@ public class DriveSubsystem extends SubsystemBase {
   public double getTurnRate() {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
+
+  public void setTrajectoryToProcessor(PhotonVisionSensor photon) {
+    resetOdometryToVision(photon);
+    // m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
+    //     new Pose2d(0, 0, new Rotation2d(0)),
+    //     List.of(),
+    //     new Pose2d(2, -2, new Rotation2d(0)),
+    //     m_trajectoryConfigForTeleop);
+
+    Pose2d currentPose = getPose();
+    // first rotate to final orientation, then beeline to target
+    m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
+        currentPose,
+        List.of(),
+        new Pose2d(11.5, 7.0, new Rotation2d(Math.PI/2)),
+        m_trajectoryConfigForTeleop);
+        
+  }
+
+  public void setTrajectoryToAprilTarget(int id, PhotonVisionSensor photon) {
+    //resetOdometryToVision(photon);
+    double targetX = 0.0; double targetY = 0.0; double rot = 0.0;
+    switch (id) {
+      case 6: // reef
+        targetX = 14.0; targetY = 2.6; rot = Math.toRadians(120);
+        break;
+    }
+    Pose2d currentPose = getPose();
+    m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
+        currentPose,
+        List.of(),
+        new Pose2d(targetX, targetY, new Rotation2d(rot)),
+        m_trajectoryConfigForTeleop);
+        
+  }
+  
+  public Command setTrajectoryToProcessorCmd(PhotonVisionSensor photon) {
+    return new InstantCommand(() -> setTrajectoryToProcessor(photon));
+  }
+  public Command setTrajectoryToAprilTargetCmd(int id, PhotonVisionSensor photon) {
+    return new InstantCommand(() -> setTrajectoryToAprilTarget(id, photon));
+  }
+
+  public Command getSwerveControllerCmdForTeleop(PhotonVisionSensor photon) {
+    return new MySwerveControllerCommand(
+        this::getPose, // Functional interface to feed supplier
+        DriveConstants.kDriveKinematics,
+        new PIDController(AutoConstants.kPXController, 0, 0),
+        new PIDController(AutoConstants.kPYController, 0, 0),
+        m_thetaControllerForTeleop,
+        this::setModuleStates,
+        this, photon,
+        this);
+  }
+
+  public Trajectory getTrajectoryForTeleop() {
+    return m_trajectoryForTeleop;
+  }
+
+  public Command setXCommand() {
+    return new InstantCommand(() -> setX());
+  }
+  public Command setXCommandHold() {
+    return new RunCommand(() -> setX());
+  }
+
+
 }

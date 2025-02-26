@@ -15,14 +15,17 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
-import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.PhotonVisionSensor;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -36,20 +39,24 @@ import java.util.List;
  */
 public class RobotContainer {
   // The robot's subsystems
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem();
-  private final Blinkin m_blinkin = new Blinkin();
+  private final PhotonVisionSensor m_photon = new PhotonVisionSensor();
+  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_photon);
 
   // The driver's controller
   /* XboxController */ GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
 
   // Operator's controller, for now the new PXN
-  GenericHID m_operatorController = new GenericHID(OIConstants.kOperatorControllerPort);
+  GenericHID m_buttonPad = new GenericHID(OIConstants.kButtonPadPort);
 
+  // private final SendableChooser<Command> m_autoChooser;
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    // m_autoChooser = AutoBuilder.buildAutoChooser();
+    // SmartDashboard.putData("Auto Chooser", m_autoChooser);
+
     // Configure the button bindings
     configureButtonBindings();
 
@@ -59,11 +66,14 @@ public class RobotContainer {
         // Turning is controlled by the X axis of the right stick.
         new RunCommand(
             () -> m_robotDrive.drive(
-                -MathUtil.applyDeadband(-m_driverController.getRawAxis(1)/4, OIConstants.kDriveDeadband), // getLeftY()
-                -MathUtil.applyDeadband(-m_driverController.getRawAxis(0)/4, OIConstants.kDriveDeadband), // getLeftX()
+                MathUtil.applyDeadband(-m_driverController.getRawAxis(1)/4, OIConstants.kDriveDeadband), // getLeftY()
+                MathUtil.applyDeadband(-m_driverController.getRawAxis(0)/4, OIConstants.kDriveDeadband), // getLeftX()
                 -MathUtil.applyDeadband(m_driverController.getRawAxis(2)/4, OIConstants.kDriveDeadband*2), // getRightX()
                 true),
             m_robotDrive));
+
+    // register named commands for pathplanner
+    // NamedCommands.registerCommand("initiateX", m_robotDrive.setXCommand());
   }
 
   /**
@@ -80,12 +90,21 @@ public class RobotContainer {
     new JoystickButton(m_driverController, Button.kR1.value)
         .whileTrue(new RunCommand(() -> m_robotDrive.setX(),m_robotDrive));
 
-    new JoystickButton(m_driverController, 1) // red B on logitech, thumb button on flight controller
+    new JoystickButton(m_driverController, 1) // red B on logitech, trigger button on flight controller
         .whileTrue(new RunCommand(() -> m_robotDrive.zeroHeading(),m_robotDrive));
 
-    new JoystickButton(m_operatorController, 3) 
-        .onTrue(m_blinkin.greenCmd())
-        .onFalse(m_blinkin.setAllianceColorCmd());
+    new JoystickButton(m_driverController, 2) // thumb button on flight controller
+        .whileTrue(new RunCommand(() -> m_robotDrive.resetOdometryToVision(m_photon), m_robotDrive, m_photon));
+
+    new JoystickButton(m_buttonPad, 3) 
+        .whileTrue(
+            m_robotDrive.setTrajectoryToAprilTargetCmd(6, m_photon)
+            .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
+            .andThen(() -> m_robotDrive.drive(0, 0, 0, false))
+        );
+
+    new JoystickButton(m_driverController, 4) // thumb button on flight controller
+        .whileTrue(m_robotDrive.setXCommand());
 
   }
 
@@ -98,8 +117,8 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // Create config for trajectory
     TrajectoryConfig config = new TrajectoryConfig(
-        AutoConstants.kMaxSpeedMetersPerSecond,
-        AutoConstants.kMaxAccelerationMetersPerSecondSquared)
+        AutoConstants.kMaxSpeedMetersPerSecond/4,
+        AutoConstants.kMaxAccelerationMetersPerSecondSquared/2)
         // Add kinematics to ensure max speed is actually obeyed
         .setKinematics(DriveConstants.kDriveKinematics);
 
@@ -112,10 +131,13 @@ public class RobotContainer {
         // End 3 meters straight ahead of where we started, facing forward
         new Pose2d(3, 0, new Rotation2d(0)),
         config);
-
+    
     var thetaController = new ProfiledPIDController(
         AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+    // Command resetPoseCommand = new InstantCommand(() -> 
+    //     m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose()));
 
     SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
         exampleTrajectory,
@@ -129,14 +151,10 @@ public class RobotContainer {
         m_robotDrive::setModuleStates,
         m_robotDrive);
 
-    // Reset odometry to the starting pose of the trajectory.
-    m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
+    Command myCmd = m_robotDrive.setTrajectoryToProcessorCmd(m_photon)
+        .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
+        .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 
-    // Run path following command, then stop at the end.
-    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+    return myCmd; // m_autoChooser.getSelected();
   }
-
-  public Blinkin getBlinkin() {
-    return m_blinkin;
-  }  
 }
