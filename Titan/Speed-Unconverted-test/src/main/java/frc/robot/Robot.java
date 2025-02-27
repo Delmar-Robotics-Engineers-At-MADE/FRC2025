@@ -7,8 +7,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -31,6 +35,17 @@ public class Robot extends TimedRobot {
   private SparkMaxConfig motorConfig;
   private SparkClosedLoopController closedLoopController;
   private RelativeEncoder encoder;
+  private ShuffleboardTab shuffTab = Shuffleboard.getTab("Motor");
+  private GenericEntry shuffTargetV = shuffTab.add("Target Velocity (degrees per min)", 0).getEntry();
+  private GenericEntry shuffTargetP = shuffTab.add("Target Position (degrees)", 0).getEntry();
+  private GenericEntry shuffVControl = shuffTab
+      .add("Velocity Ctrl", false)
+      .withWidget(BuiltInWidgets.kToggleButton)
+      .getEntry();
+  private GenericEntry shuffResetEncoder = shuffTab
+      .add("Reset Encoder", false)
+      .withWidget(BuiltInWidgets.kToggleButton)
+      .getEntry();
 
   public Robot() {
     /*
@@ -99,31 +114,30 @@ public class Robot extends TimedRobot {
      */
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
-    // Initialize dashboard values
-    SmartDashboard.setDefaultNumber("Target Position", 0);
-    SmartDashboard.setDefaultNumber("Target Velocity", 0);
-    SmartDashboard.setDefaultBoolean("Velocity Ctrl", false);
-    SmartDashboard.setDefaultBoolean("Reset Encoder", false);
+    // set up read-only widgets of dashboard
+    shuffTab.addDouble("Actual Position", () -> encoder.getPosition());
+    shuffTab.addDouble("Actual Velocity", () -> encoder.getVelocity());
+
   }
 
   @Override
   public void teleopPeriodic() {
-    if (SmartDashboard.getBoolean("Velocity Ctrl", false)) {
+    if (shuffVControl.getBoolean(false)) {
       /*
-       * Get the target velocity from SmartDashboard and set it as the setpoint
+       * Get the target velocity from Shuffleboard and set it as the setpoint
        * for the closed loop controller with MAXMotionVelocityControl as the
        * control type.
        */
-      double targetVelocity = SmartDashboard.getNumber("Target Velocity", 0);
+      double targetVelocity = shuffTargetV.getDouble(0);
       closedLoopController.setReference(targetVelocity, ControlType.kMAXMotionVelocityControl,
           ClosedLoopSlot.kSlot1);
     } else {
       /*
-       * Get the target position from SmartDashboard and set it as the setpoint
+       * Get the target position from Shuffleboard and set it as the setpoint
        * for the closed loop controller with MAXMotionPositionControl as the
        * control type.
        */
-      double targetPosition = SmartDashboard.getNumber("Target Position", 0);
+      double targetPosition = shuffTargetP.getDouble(0);
       closedLoopController.setReference(targetPosition, ControlType.kMAXMotionPositionControl,
           ClosedLoopSlot.kSlot0);
     }
@@ -131,12 +145,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
-    // Display encoder position and velocity
-    SmartDashboard.putNumber("Actual Position", encoder.getPosition());
-    SmartDashboard.putNumber("Actual Velocity", encoder.getVelocity());
+    // System.out.println("Button: " + shuffResetEncoder.getBoolean(false));
 
-    if (SmartDashboard.getBoolean("Reset Encoder", false)) {
-      SmartDashboard.putBoolean("Reset Encoder", false);
+    if (shuffResetEncoder.getBoolean(false)) {
+      System.out.println("Resetting encoder");
+      shuffResetEncoder.setBoolean(false);
       // Reset the encoder position to 0
       encoder.setPosition(0);
     }
