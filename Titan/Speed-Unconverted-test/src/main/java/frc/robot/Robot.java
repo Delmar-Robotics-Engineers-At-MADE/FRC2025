@@ -31,13 +31,14 @@ public class Robot extends TimedRobot {
   static final int MotorCANID = 4;
   static final double MRTOORTD = 360 / 5.49; // Motor Rotations To One Output Rotation To Degrees
 
-  private SparkMax motor;
+  private SparkMax motor, motor2;
   private SparkMaxConfig motorConfig;
   private SparkClosedLoopController closedLoopController;
   private RelativeEncoder encoder;
   private ShuffleboardTab shuffTab = Shuffleboard.getTab("Motor");
   private GenericEntry shuffTargetV = shuffTab.add("Target Velocity (degrees per min)", 0).getEntry();
   private GenericEntry shuffTargetP = shuffTab.add("Target Position (degrees)", 0).getEntry();
+  private GenericEntry shuffKFF = shuffTab.add("kFF", 0).getEntry();
   private GenericEntry shuffVControl = shuffTab
       .add("Velocity Ctrl", false)
       .withWidget(BuiltInWidgets.kToggleButton)
@@ -53,6 +54,7 @@ public class Robot extends TimedRobot {
      * objects for later use.
      */
     motor = new SparkMax(4, MotorType.kBrushless);
+    motor2 = new SparkMax(1, MotorType.kBrushless);
     closedLoopController = motor.getClosedLoopController();
     encoder = motor.getEncoder();
 
@@ -114,6 +116,10 @@ public class Robot extends TimedRobot {
      */
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
+    // second motor inverted and following first
+    motorConfig.follow(4, true);
+    motor2.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+
     // set up read-only widgets of dashboard
     shuffTab.addDouble("Actual Position", () -> encoder.getPosition());
     shuffTab.addDouble("Actual Velocity", () -> encoder.getVelocity());
@@ -138,8 +144,11 @@ public class Robot extends TimedRobot {
        * control type.
        */
       double targetPosition = shuffTargetP.getDouble(0);
+      double kFF = shuffKFF.getDouble(0);
+      double angle = Math.toRadians(encoder.getPosition());  // calculate angle in rads
+      double feedForward = kFF * Math.sin(angle);
       closedLoopController.setReference(targetPosition, ControlType.kMAXMotionPositionControl,
-          ClosedLoopSlot.kSlot0);
+          ClosedLoopSlot.kSlot0, feedForward);
     }
   }
 

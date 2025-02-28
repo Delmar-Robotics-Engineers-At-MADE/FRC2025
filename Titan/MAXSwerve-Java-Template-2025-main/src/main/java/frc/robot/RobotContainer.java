@@ -15,8 +15,9 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+// import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
@@ -60,6 +61,9 @@ public class RobotContainer {
     // Configure the button bindings
     configureButtonBindings();
 
+    // setup dashboard
+    setupDashboard();
+
     // Configure default commands
     m_robotDrive.setDefaultCommand(
         // The left stick controls translation of the robot.
@@ -76,15 +80,6 @@ public class RobotContainer {
     // NamedCommands.registerCommand("initiateX", m_robotDrive.setXCommand());
   }
 
-  /**
-   * Use this method to define your button->command mappings. Buttons can be
-   * created by
-   * instantiating a {@link edu.wpi.first.wpilibj.GenericHID} or one of its
-   * subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then calling
-   * passing it to a
-   * {@link JoystickButton}.
-   */
   private void configureButtonBindings() {
 
     new JoystickButton(m_driverController, Button.kR1.value)
@@ -156,5 +151,9 @@ public class RobotContainer {
         .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 
     return myCmd; // m_autoChooser.getSelected();
+  }
+
+  private void setupDashboard() {
+    Shuffleboard.getTab("Match").addCamera("Limelight", "Limelight", "http://10.80.77.18:5800");
   }
 }
