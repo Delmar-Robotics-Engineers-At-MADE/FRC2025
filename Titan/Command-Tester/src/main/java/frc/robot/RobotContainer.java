@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -63,12 +64,16 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     m_operCmdController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
-    m_operCmdController.x().onTrue(m_exampleSubsystem3.holdCurrentPositionCmd()
-        .andThen(m_exampleSubsystem2.greenCmd()));
+    // m_operCmdController.x().onTrue(m_exampleSubsystem3.holdCurrentPositionCmd()
+    //     .andThen(m_exampleSubsystem2.greenCmd()));
 
     // Manual control when Back or Start buttons are pressed
-    m_operCmdController.back().and(m_operCmdController.leftBumper())
-        .whileTrue(new InstantCommand(() -> m_exampleSubsystem3.moveOpenLoopPort()));
+    m_operCmdController.back().or(m_operCmdController.start())
+        .and(m_operCmdController.leftBumper())
+        .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(true, false));
+    m_operCmdController.back().or(m_operCmdController.start())
+        .and(m_operCmdController.rightBumper())
+        .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(false, true));
 
   }
 
