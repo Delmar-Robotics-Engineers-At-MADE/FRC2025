@@ -24,12 +24,17 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.PhotonVisionSensor;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
+
 import java.util.List;
 
 /*
@@ -42,12 +47,17 @@ public class RobotContainer {
   // The robot's subsystems
   private final PhotonVisionSensor m_photon = new PhotonVisionSensor();
   private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_photon);
+  private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
 
-  // The driver's controller
-  /* XboxController */ GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
-
-  // Operator's controller, for now the new PXN
+  // Driver
+  GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
+  CommandGenericHID m_driverCmdController = new CommandGenericHID (OIConstants.kDriverControllerPort);
+  // Operator
+  XboxController m_operController = new XboxController(OIConstants.kOperatorControllerPort);
+  CommandXboxController  m_operCmdController = new CommandXboxController (OIConstants.kOperatorControllerPort);
+  // Button pad (PXN)
   GenericHID m_buttonPad = new GenericHID(OIConstants.kButtonPadPort);
+  CommandGenericHID  m_buttonPadCmd = new CommandGenericHID (OIConstants.kButtonPadPort);
 
   // private final SendableChooser<Command> m_autoChooser;
 
@@ -100,6 +110,12 @@ public class RobotContainer {
 
     new JoystickButton(m_driverController, 4) // thumb button on flight controller
         .whileTrue(m_robotDrive.setXCommand());
+
+    // Manual control when Back or Start buttons are pressed
+    m_operCmdController.back().and(m_operCmdController.leftBumper())
+        .whileTrue(new InstantCommand(() -> m_elevator.moveOpenLoopPort()));
+
+    
 
   }
 
