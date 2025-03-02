@@ -143,9 +143,7 @@ public class ElevatorSubsystem extends SubsystemBase{
         closedLoopPort.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
         System.out.println("************* Port elevator homed, can't move manually **********");
       }
-    } else {  // not moving port, so hold it
-      // holdCurrentPosition(true, false);
-    }
+    } 
 
     if (starboard) {
       if (!m_homedStar) {  // ok to move manually
@@ -154,9 +152,9 @@ public class ElevatorSubsystem extends SubsystemBase{
         closedLoopStar.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
         System.out.println("************* Starboard elevator homed, can't move manually **********");
       }
-    } else { // not moving starboard, so hold it
-      // holdCurrentPosition(false, true);
-    }
+    } 
+
+    checkForHomePosition();
   }
 
   public Command moveOpenLoopCommand(boolean port, boolean starboard) {

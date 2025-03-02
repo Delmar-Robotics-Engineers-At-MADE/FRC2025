@@ -68,20 +68,6 @@ public class RobotContainer {
     //     .andThen(m_exampleSubsystem2.greenCmd()));
 
     // Manual control when Back or Start buttons are pressed
-    // m_operCmdController.leftBumper().and(m_operCmdController.rightBumper())
-    //     .and(m_operCmdController.start())
-    //     .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(true, true));
-    // m_operCmdController.leftBumper().and(m_operCmdController.rightBumper())
-    //     .and(m_operCmdController.back())
-    //     .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(true, true));
-    // m_operCmdController.leftBumper().and(m_operCmdController.start())
-    //     .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(true, false));
-    // m_operCmdController.leftBumper().and(m_operCmdController.back())
-    //     .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(true, false));
-    // m_operCmdController.rightBumper().and(m_operCmdController.start())
-    //     .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(false, true));
-    // m_operCmdController.rightBumper().and(m_operCmdController.back())
-    //     .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(false, true));
         
     m_operCmdController.back().or(m_operCmdController.start())
         .and(m_operCmdController.leftBumper())

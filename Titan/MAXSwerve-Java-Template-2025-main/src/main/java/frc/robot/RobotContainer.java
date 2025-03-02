@@ -112,8 +112,12 @@ public class RobotContainer {
         .whileTrue(m_robotDrive.setXCommand());
 
     // Manual control when Back or Start buttons are pressed
-    m_operCmdController.back().and(m_operCmdController.leftBumper())
-        .whileTrue(new InstantCommand(() -> m_elevator.moveOpenLoopPort()));
+    m_operCmdController.back().or(m_operCmdController.start())
+        .and(m_operCmdController.leftBumper())
+        .whileTrue(m_elevator.moveOpenLoopCommand(true, false));
+    m_operCmdController.back().or(m_operCmdController.start())
+        .and(m_operCmdController.rightBumper())
+        .whileTrue(m_elevator.moveOpenLoopCommand(false, true));
 
     
 

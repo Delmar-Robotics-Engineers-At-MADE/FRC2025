@@ -16,7 +16,10 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.commands.HoldElevatorCmd;
 
 public class ElevatorSubsystem extends SubsystemBase{
 
@@ -91,22 +94,25 @@ public class ElevatorSubsystem extends SubsystemBase{
     // Dashboard indicators
     matchTab.addBoolean("El Port Homed", () -> getHomedPort());
     matchTab.addBoolean("El Star Homed", () -> getHomedStar());
+
+    setDefaultCommand(new HoldElevatorCmd(this));
   
   }
 
-  public void holdCurrentPosition () {
-    double currPosPort = m_encoderPort.getPosition();
-    double currPosStar = m_encoderStar.getPosition();
-    closedLoopPort.setReference(currPosPort, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
-    closedLoopStar.setReference(currPosStar, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
-  }
-
-  public Command holdCurrentPositionCmd () {
-    return runOnce(() -> holdCurrentPosition()); 
+  public void holdCurrentPosition (boolean port, boolean starboard) {
+    System.out.println("holding current position");
+    if (port) {
+      double currPosPort = m_encoderPort.getPosition();
+      closedLoopPort.setReference(currPosPort, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
+    }
+    if (starboard) {
+      double currPosStar = m_encoderStar.getPosition();
+      closedLoopStar.setReference(currPosStar, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
+    }
   }
 
   private void checkForHomePosition () {
-    System.out.println("checking home of elevator");
+    // System.out.println("checking home of elevator");
     if (!m_homedPort && m_magSwitchPort.get() == false) { // false means pressed
       m_homedPort = true;
       m_encoderPort.setPosition(HomeAngle);
@@ -126,22 +132,33 @@ public class ElevatorSubsystem extends SubsystemBase{
     }
   }
 
-  public void moveOpenLoopPort () {
-    if (!m_homedPort) {
-      closedLoopPort.setReference(OpenLoopV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
-      checkForHomePosition();
-    } else {
-      System.out.println("************* Port elevator homed, can't move manually **********");
-    }
+  public void moveOpenLoop (boolean port, boolean starboard) {
+
+    if (port && starboard) {System.out.println("moving both elevator motors");}
+
+    if (port) {
+      if (!m_homedPort) {  // ok to move manually
+        closedLoopPort.setReference(OpenLoopV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+      } else {
+        closedLoopPort.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+        System.out.println("************* Port elevator homed, can't move manually **********");
+      }
+    } 
+
+    if (starboard) {
+      if (!m_homedStar) {  // ok to move manually
+        closedLoopStar.setReference(OpenLoopV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+      } else {
+        closedLoopStar.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+        System.out.println("************* Starboard elevator homed, can't move manually **********");
+      }
+    } 
+
+    checkForHomePosition();
   }
 
-  public void moveOpenLoopStar () {
-    if (!m_homedStar) {
-      closedLoopPort.setReference(OpenLoopV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
-      checkForHomePosition();
-    } else {
-      System.out.println("************* Starboard elevator homed, can't move manually **********");
-    }
+  public Command moveOpenLoopCommand(boolean port, boolean starboard) {
+    return new RunCommand(() -> moveOpenLoop(port, starboard), this);
   }
 
   public boolean getHomedPort () {return m_homedPort;}
