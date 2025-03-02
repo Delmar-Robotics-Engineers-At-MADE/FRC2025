@@ -134,7 +134,7 @@ public class ElevatorSubsystem extends SubsystemBase{
 
   public void moveOpenLoop (boolean port, boolean starboard) {
 
-    System.out.println("moving elevator open loop");
+    if (port && starboard) {System.out.println("moving both elevator motors");}
 
     if (port) {
       if (!m_homedPort) {  // ok to move manually
