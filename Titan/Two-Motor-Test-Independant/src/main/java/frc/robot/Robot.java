@@ -28,13 +28,16 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 public class Robot extends TimedRobot {
 
-  static final int MotorCANID = 4;
+  static final int Motor1CANID = 4;
+  static final int Motor2CANID = 1;
   static final double MRTOORTD = 360 / 5.49; // Motor Rotations To One Output Rotation To Degrees
+  static final double HomeAngle = 0;
+  static final double PositionTolerance = 10; // degrees
 
-  private SparkMax motor, motor2;
+  private SparkMax motor1, motor2;
   private SparkMaxConfig motorConfig;
-  private SparkClosedLoopController closedLoopController;
-  private RelativeEncoder encoder;
+  private SparkClosedLoopController closedLoopController1,closedLoopController2;
+  private RelativeEncoder encoder1,encoder2;
   private ShuffleboardTab shuffTab = Shuffleboard.getTab("Motor");
   private GenericEntry shuffTargetV = shuffTab.add("Target Velocity (degrees per min)", 0).getEntry();
   private GenericEntry shuffTargetP = shuffTab.add("Target Position (degrees)", 0).getEntry();
@@ -53,10 +56,12 @@ public class Robot extends TimedRobot {
      * Initialize the SPARK MAX and get its encoder and closed loop controller
      * objects for later use.
      */
-    motor = new SparkMax(4, MotorType.kBrushless);
-    motor2 = new SparkMax(1, MotorType.kBrushless);
-    closedLoopController = motor.getClosedLoopController();
-    encoder = motor.getEncoder();
+    motor1 = new SparkMax(Motor1CANID, MotorType.kBrushless);
+    motor2 = new SparkMax(Motor2CANID, MotorType.kBrushless);
+    closedLoopController1 = motor1.getClosedLoopController();
+    closedLoopController2 = motor2.getClosedLoopController();
+    encoder1 = motor1.getEncoder();
+    encoder2 = motor2.getEncoder();
 
     /*
      * Create a new SPARK MAX configuration object. This will store the
@@ -98,7 +103,7 @@ public class Robot extends TimedRobot {
         // a closed loop slot, as it will default to slot 0.
         .maxVelocity(1000*MRTOORTD)
         .maxAcceleration(1000*MRTOORTD)
-        .allowedClosedLoopError(20) // in degrees
+        .allowedClosedLoopError(PositionTolerance) // in degrees
         // Set MAXMotion parameters for velocity control in slot 1
         .maxAcceleration(500*MRTOORTD, ClosedLoopSlot.kSlot1)
         .maxVelocity(6000*MRTOORTD, ClosedLoopSlot.kSlot1)
@@ -114,15 +119,15 @@ public class Robot extends TimedRobot {
      * the SPARK MAX loses power. This is useful for power cycles that may occur
      * mid-operation.
      */
-    motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    motor1.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
-    // second motor inverted and following first
-    motorConfig.follow(4, true);
+    // second motor inverted... will get same commands, but can't follow because not physically connected
+    motorConfig.inverted(true);
     motor2.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // set up read-only widgets of dashboard
-    shuffTab.addDouble("Actual Position", () -> encoder.getPosition());
-    shuffTab.addDouble("Actual Velocity", () -> encoder.getVelocity());
+    shuffTab.addDouble("Actual Position", () -> encoder1.getPosition());
+    shuffTab.addDouble("Actual Velocity", () -> encoder1.getVelocity());
 
   }
 
@@ -135,7 +140,9 @@ public class Robot extends TimedRobot {
        * control type.
        */
       double targetVelocity = shuffTargetV.getDouble(0);
-      closedLoopController.setReference(targetVelocity, ControlType.kMAXMotionVelocityControl,
+      closedLoopController1.setReference(targetVelocity, ControlType.kMAXMotionVelocityControl,
+          ClosedLoopSlot.kSlot1);
+      closedLoopController2.setReference(targetVelocity, ControlType.kMAXMotionVelocityControl,
           ClosedLoopSlot.kSlot1);
     } else {
       /*
@@ -145,10 +152,14 @@ public class Robot extends TimedRobot {
        */
       double targetPosition = shuffTargetP.getDouble(0);
       double kFF = shuffKFF.getDouble(0);
-      double angle = Math.toRadians(encoder.getPosition());  // calculate angle in rads
-      double feedForward = kFF * Math.sin(angle);
-      closedLoopController.setReference(targetPosition, ControlType.kMAXMotionPositionControl,
-          ClosedLoopSlot.kSlot0, feedForward);
+      double angle1 = Math.toRadians(encoder1.getPosition());  // calculate angle in rads
+      double angle2 = Math.toRadians(encoder2.getPosition());  // calculate angle in rads
+      double feedForward1 = kFF * Math.sin(angle1);
+      double feedForward2 = kFF * Math.sin(angle2);
+      closedLoopController1.setReference(targetPosition, ControlType.kMAXMotionPositionControl,
+          ClosedLoopSlot.kSlot0, feedForward1);
+      closedLoopController2.setReference(targetPosition, ControlType.kMAXMotionPositionControl,
+          ClosedLoopSlot.kSlot0, feedForward2);
     }
   }
 
@@ -160,7 +171,8 @@ public class Robot extends TimedRobot {
       System.out.println("Resetting encoder");
       shuffResetEncoder.setBoolean(false);
       // Reset the encoder position to 0
-      encoder.setPosition(0);
+      encoder1.setPosition(HomeAngle);
+      encoder2.setPosition(HomeAngle);
     }
   }
 }

@@ -28,8 +28,11 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 public class Robot extends TimedRobot {
 
-  static final int MotorCANID = 4;
+  static final int Motor1CANID = 4;
+  static final int Motor2CANID = 1;
   static final double MRTOORTD = 360 / 5.49; // Motor Rotations To One Output Rotation To Degrees
+  static final double HomeAngle = 0;
+  static final double PositionTolerance = 10; // degrees
 
   private SparkMax motor, motor2;
   private SparkMaxConfig motorConfig;
@@ -53,8 +56,8 @@ public class Robot extends TimedRobot {
      * Initialize the SPARK MAX and get its encoder and closed loop controller
      * objects for later use.
      */
-    motor = new SparkMax(4, MotorType.kBrushless);
-    motor2 = new SparkMax(1, MotorType.kBrushless);
+    motor = new SparkMax(Motor1CANID, MotorType.kBrushless);
+    motor2 = new SparkMax(Motor2CANID, MotorType.kBrushless);
     closedLoopController = motor.getClosedLoopController();
     encoder = motor.getEncoder();
 
@@ -98,7 +101,7 @@ public class Robot extends TimedRobot {
         // a closed loop slot, as it will default to slot 0.
         .maxVelocity(1000*MRTOORTD)
         .maxAcceleration(1000*MRTOORTD)
-        .allowedClosedLoopError(20) // in degrees
+        .allowedClosedLoopError(PositionTolerance) // in degrees
         // Set MAXMotion parameters for velocity control in slot 1
         .maxAcceleration(500*MRTOORTD, ClosedLoopSlot.kSlot1)
         .maxVelocity(6000*MRTOORTD, ClosedLoopSlot.kSlot1)
@@ -117,7 +120,7 @@ public class Robot extends TimedRobot {
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // second motor inverted and following first
-    motorConfig.follow(4, true);
+    motorConfig.follow(Motor1CANID, true);
     motor2.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // set up read-only widgets of dashboard
@@ -160,7 +163,7 @@ public class Robot extends TimedRobot {
       System.out.println("Resetting encoder");
       shuffResetEncoder.setBoolean(false);
       // Reset the encoder position to 0
-      encoder.setPosition(0);
+      encoder.setPosition(HomeAngle);
     }
   }
 }
