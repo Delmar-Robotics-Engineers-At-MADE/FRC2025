@@ -25,8 +25,8 @@ public class ElevatorSubsystem extends SubsystemBase{
 
   static final int CANIDPort = 1;
   static final int CANIDStar = 4;
-  static final int DIONumPort = 0;
-  static final int DIONumStar = 1;
+  static final int DIONumPort = 2;
+  static final int DIONumStar = 3;
   static final int HomeAngle = 0;
   static final double OpenLoopV = 10000;  // degrees per minute
   static final double MRTOORTD = 360 / 5.49; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49

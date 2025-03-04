@@ -10,7 +10,7 @@ import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
-import frc.robot.subsystems.ManipulatorSubsystem;
+import frc.robot.subsystems.Manipulator2BarSS;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,7 +33,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final Blinkin m_exampleSubsystem2 = new Blinkin();
-  private final ManipulatorSubsystem m_exampleSubsystem3 = new ManipulatorSubsystem();
+  private final Manipulator2BarSS m_exampleSubsystem3 = new Manipulator2BarSS();
 
   // Driver
   GenericHID m_driverController = new GenericHID(0);

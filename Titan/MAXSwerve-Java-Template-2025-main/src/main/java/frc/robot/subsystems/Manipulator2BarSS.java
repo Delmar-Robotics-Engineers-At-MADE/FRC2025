@@ -19,39 +19,38 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.commands.Hold2BarCmd;
 import frc.robot.commands.HoldElevatorCmd;
 
-public class ElevatorSubsystem extends SubsystemBase{
+public class Manipulator2BarSS extends SubsystemBase{
 
-  static final int CANIDPort = 1;
-  static final int CANIDStar = 4;
-  static final int DIONumPort = 0;
-  static final int DIONumStar = 1;
+  static final int CANIDPort = 2;
+  static final int CANIDStar = 3;
+  static final int DIONumPort = 2;
+  static final int DIONumStar = 3;
+  static final int DIONumCoral = 4;
   static final int HomeAngle = 0;
   static final double OpenLoopV = 10000;  // degrees per minute
-  static final double MRTOORTD = 360 / 5.49; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
+  static final double MRTOORTD = 360 / 27.46; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motorPort, m_motorStar;
   private SparkMaxConfig motorConfig;
-  private SparkClosedLoopController closedLoopPort, closedLoopStar;
+  private SparkClosedLoopController closedLoopController;
   private RelativeEncoder m_encoderPort, m_encoderStar;
-  private DigitalInput m_magSwitchPort, m_magSwitchStar;
-  private boolean m_homedPort = false, m_homedStar = false;
-  private double m_holdPosPort = 0, m_holdPosStar = 0;
+  private DigitalInput m_magSwitchPort, m_magSwitchStar, m_photoCoral;
+  private boolean m_homedPort = false, m_homedStar = false, m_coralPresent = false;
 
   // shuffleboard stuff
   private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
 
-  public ElevatorSubsystem() {
+  public Manipulator2BarSS() {
     m_magSwitchPort = new DigitalInput(DIONumPort);
     m_magSwitchStar = new DigitalInput(DIONumStar);
+    m_photoCoral = new DigitalInput(DIONumCoral);
     m_motorPort = new SparkMax(CANIDPort, MotorType.kBrushless);
     m_motorStar = new SparkMax(CANIDStar, MotorType.kBrushless);
-    closedLoopPort = m_motorPort.getClosedLoopController();
-    closedLoopStar = m_motorStar.getClosedLoopController();
+    closedLoopController = m_motorPort.getClosedLoopController();
     m_encoderPort = m_motorPort.getEncoder();
-    m_encoderStar = m_motorStar.getEncoder();
-    
 
     motorConfig = new SparkMaxConfig();
     motorConfig.encoder
@@ -87,30 +86,26 @@ public class ElevatorSubsystem extends SubsystemBase{
     m_motorPort.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // second motor inverted and following first
-    motorConfig.inverted(true);
+    motorConfig.follow(CANIDPort, true);
     m_motorStar.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // Already homed?  Hope so, at beginning of match
     checkForHomePosition();
+    checkForCoral();
 
     // Dashboard indicators
-    matchTab.addBoolean("El Port Homed", () -> getHomedPort());
-    matchTab.addBoolean("El Star Homed", () -> getHomedStar());
+    matchTab.addBoolean("2Bar Port Homed", () -> getHomedPort());
+    matchTab.addBoolean("2Bar Star Homed", () -> getHomedStar());
+    matchTab.addBoolean("Coral Present", () -> getCoralPresent());
 
-    setDefaultCommand(new HoldElevatorCmd(this));
+    setDefaultCommand(new Hold2BarCmd(this));
   
   }
 
-  public void holdCurrentPosition (boolean port, boolean starboard) {
-    System.out.println("holding current position");
-    if (port) {
-      m_holdPosPort = m_encoderPort.getPosition();
-      closedLoopPort.setReference(m_holdPosPort, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
-    }
-    if (starboard) {
-      double m_holdPosStar = m_encoderStar.getPosition();
-      closedLoopStar.setReference(m_holdPosStar, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
-    }
+  public void holdCurrentPosition () {
+    System.out.println("2 bar holding current position");
+    double currPosPort = m_encoderPort.getPosition();
+    closedLoopController.setReference(currPosPort, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
   }
 
   private void checkForHomePosition () {
@@ -125,44 +120,35 @@ public class ElevatorSubsystem extends SubsystemBase{
     }
   }
 
+  private void checkForCoral () {
+    System.out.println("checking for coral");
+    m_coralPresent = (m_photoCoral.get() == false); // false means present
+  }
+
   public void moveToPosition (double angle) {
     if (m_homedPort && m_homedStar) {
-      closedLoopPort.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0);
-      closedLoopStar.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0);
+      closedLoopController.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0);
     } else {
-      System.out.println("************* Both elevator motors not homed, can't move to position **********");
+      System.out.println("************* Both 2 bar motors not homed, can't move to position **********");
     }
   }
 
-  public void moveOpenLoop (boolean up, boolean port, boolean starboard) {
-
-    if (port && starboard) {System.out.println("moving both elevator motors");}
-
-    if (port) {
-      if (!m_homedPort) {  // ok to move manually
-        closedLoopPort.setReference(OpenLoopV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
-      } else {
-        System.out.println("************* Port elevator homed, can't move manually **********");
-        closedLoopPort.setReference(m_holdPosPort, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
-      }
-    } 
-
-    if (starboard) {
-      if (!m_homedStar) {  // ok to move manually
-        closedLoopStar.setReference(OpenLoopV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
-      } else {
-        System.out.println("************* Starboard elevator homed, can't move manually **********");
-        closedLoopPort.setReference(m_holdPosStar, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
-      }
-    } 
+  public void moveOpenLoop (boolean up) {
+    if (!m_homedPort || !m_homedStar) {  // ok to move manually
+      closedLoopController.setReference(OpenLoopV * (up?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+    } else {
+      closedLoopController.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+      System.out.println("************* 2 bar homed, can't move manually **********");
+    }
 
     checkForHomePosition();
   }
 
-  public Command moveOpenLoopCommand(boolean up, boolean port, boolean starboard) {
-    return new RunCommand(() -> moveOpenLoop(up, port, starboard), this);
+  public Command moveOpenLoopCommand(boolean up) {
+    return new RunCommand(() -> moveOpenLoop(up), this);
   }
 
+  public boolean getCoralPresent () {/*return m_coralPresent;*/ return m_photoCoral.get();}
   public boolean getHomedPort () {return m_homedPort;}
   public boolean getHomedStar () {return m_homedStar;}
 

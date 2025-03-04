@@ -44,6 +44,9 @@ import java.util.List;
  * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+
+  static final double TriggerThreshold = 0.5;
+
   // The robot's subsystems
   private final PhotonVisionSensor m_photon = new PhotonVisionSensor();
   private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_photon);
@@ -114,10 +117,16 @@ public class RobotContainer {
     // Manual control when Back or Start buttons are pressed
     m_operCmdController.back().or(m_operCmdController.start())
         .and(m_operCmdController.leftBumper())
-        .whileTrue(m_elevator.moveOpenLoopCommand(true, false));
+        .whileTrue(m_elevator.moveOpenLoopCommand(true, true, false));
     m_operCmdController.back().or(m_operCmdController.start())
         .and(m_operCmdController.rightBumper())
-        .whileTrue(m_elevator.moveOpenLoopCommand(false, true));
+        .whileTrue(m_elevator.moveOpenLoopCommand(true, false, true));
+    m_operCmdController.back().or(m_operCmdController.start())
+        .and(m_operCmdController.leftTrigger(TriggerThreshold))
+        .whileTrue(m_elevator.moveOpenLoopCommand(false, true, false));
+    m_operCmdController.back().or(m_operCmdController.start())
+        .and(m_operCmdController.rightTrigger(TriggerThreshold))
+        .whileTrue(m_elevator.moveOpenLoopCommand(false, false, true));
 
     
 
