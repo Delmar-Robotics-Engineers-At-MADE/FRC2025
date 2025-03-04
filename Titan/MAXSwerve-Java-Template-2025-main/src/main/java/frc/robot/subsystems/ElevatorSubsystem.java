@@ -25,9 +25,10 @@ public class ElevatorSubsystem extends SubsystemBase{
 
   static final int CANIDPort = 1;
   static final int CANIDStar = 4;
-  static final int DIONumPort = 0;
-  static final int DIONumStar = 1;
+  static final int DIONumPort = 2;
+  static final int DIONumStar = 3;
   static final int HomeAngle = 0;
+  static final double PositionTolerance = 10; // degrees
   static final double OpenLoopV = 10000;  // degrees per minute
   static final double MRTOORTD = 360 / 5.49; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
@@ -78,7 +79,7 @@ public class ElevatorSubsystem extends SubsystemBase{
         // a closed loop slot, as it will default to slot 0.
         .maxVelocity(1000*MRTOORTD)
         .maxAcceleration(1000*MRTOORTD)
-        .allowedClosedLoopError(5) // in degrees
+        .allowedClosedLoopError(PositionTolerance) // in degrees
         // Set MAXMotion parameters for velocity control in slot 1
         .maxAcceleration(500*MRTOORTD, ClosedLoopSlot.kSlot1)
         .maxVelocity(6000*MRTOORTD, ClosedLoopSlot.kSlot1)
