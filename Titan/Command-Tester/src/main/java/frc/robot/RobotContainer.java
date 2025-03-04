@@ -10,6 +10,7 @@ import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.ManipulatorSubsystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -26,10 +27,13 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+
+  static final double TriggerThreshold = 0.5;
+
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final Blinkin m_exampleSubsystem2 = new Blinkin();
-  private final ElevatorSubsystem m_exampleSubsystem3 = new ElevatorSubsystem();
+  private final ManipulatorSubsystem m_exampleSubsystem3 = new ManipulatorSubsystem();
 
   // Driver
   GenericHID m_driverController = new GenericHID(0);
@@ -71,10 +75,10 @@ public class RobotContainer {
         
     m_operCmdController.back().or(m_operCmdController.start())
         .and(m_operCmdController.leftBumper())
-        .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(true, false));
+        .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(true));
     m_operCmdController.back().or(m_operCmdController.start())
-        .and(m_operCmdController.rightBumper())
-        .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(false, true));
+        .and(m_operCmdController.leftTrigger(TriggerThreshold))
+        .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(false));
 
   }
 
