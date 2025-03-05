@@ -93,6 +93,12 @@ public class RobotContainer {
     // NamedCommands.registerCommand("initiateX", m_robotDrive.setXCommand());
   }
 
+  private Command driveToAprilTagCommand (int id) {
+    return m_robotDrive.setTrajectoryToAprilTargetCmd(id, m_photon)
+    .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
+    .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+  }
+
   private void configureButtonBindings() {
 
     new JoystickButton(m_driverController, Button.kR1.value)
@@ -101,15 +107,13 @@ public class RobotContainer {
     new JoystickButton(m_driverController, 1) // red B on logitech, trigger button on flight controller
         .whileTrue(new RunCommand(() -> m_robotDrive.zeroHeading(),m_robotDrive));
 
-    new JoystickButton(m_driverController, 2) // thumb button on flight controller
-        .whileTrue(new RunCommand(() -> m_robotDrive.resetOdometryToVision(m_photon), m_robotDrive, m_photon));
+    // new JoystickButton(m_driverController, 2) // thumb button on flight controller
+    //     .whileTrue(new RunCommand(() -> m_robotDrive.debugResetOdometryToVision(m_photon), m_robotDrive, m_photon));
 
-    new JoystickButton(m_buttonPad, 3) 
-        .whileTrue(
-            m_robotDrive.setTrajectoryToAprilTargetCmd(6, m_photon)
-            .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
-            .andThen(() -> m_robotDrive.drive(0, 0, 0, false))
-        );
+    new JoystickButton(m_buttonPad, 1).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToAprilTagCommand(6));
+    new JoystickButton(m_buttonPad, 2).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToAprilTagCommand(7));
 
     new JoystickButton(m_driverController, 4) // thumb button on flight controller
         .whileTrue(m_robotDrive.setXCommand());
@@ -175,7 +179,7 @@ public class RobotContainer {
         m_robotDrive::setModuleStates,
         m_robotDrive);
 
-    Command myCmd = m_robotDrive.setTrajectoryToProcessorCmd(m_photon)
+    Command myCmd = m_robotDrive.setTrajectoryToAprilTargetCmd(6, m_photon)
         .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
         .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 

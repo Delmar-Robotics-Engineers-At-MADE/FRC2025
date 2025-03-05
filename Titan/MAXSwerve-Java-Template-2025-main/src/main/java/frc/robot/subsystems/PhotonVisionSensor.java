@@ -33,16 +33,23 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public final class PhotonVisionSensor extends SubsystemBase {
 
   // The name of the network table here MUST match the name specified for the camera in the UI
-  static PhotonCamera camera = new PhotonCamera("photoncamera");
+  static PhotonCamera m_cameraFront = new PhotonCamera("photoncamera_front");
+  static PhotonCamera m_cameraBack = new PhotonCamera("photoncamera_back");
 
   /// @todo Fill this in with the correct measurements later
-  //Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-  static Transform3d robotToCam = new Transform3d(new Translation3d(0.5, 0.0, 0.5), new Rotation3d(0,0,0));
+  // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
+  static Transform3d robotToCamFront = new Transform3d(new Translation3d(0.5, 0.0, 0.5), 
+      new Rotation3d(0,0,0));
+  static Transform3d robotToCamBack = new Transform3d(new Translation3d(0.5, 0.0, 0.5), 
+      new Rotation3d(0,0,Math.PI));
 
   static AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);    
-  static PhotonPoseEstimator photonPoseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam);
+  static PhotonPoseEstimator m_EstimatorFront = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCamFront);
+  static PhotonPoseEstimator m_EstimatorBack = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCamBack);
 
   private EstimatedRobotPose m_latestEstimatedPose = new EstimatedRobotPose(new Pose3d(0,0,0,new Rotation3d(0,0,0)), 0,null, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
+  private ShuffleboardTab m_matchTab = Shuffleboard.getTab("Match");
+  private boolean m_poseEstimateAcquired = false;
 
   public PhotonVisionSensor() {
     // constructor
@@ -54,27 +61,29 @@ public final class PhotonVisionSensor extends SubsystemBase {
     tab.addDouble("Pose X", () -> getPoseX());
     tab.addDouble("Pose Y", () -> getPoseY());
     tab.addString("Rotation", () -> getPoseRot());
+    m_matchTab.addBoolean("Vision Fix", () -> getPoseEstimateAcquired());
   }  
 
-  public void getBestTargetLocation() {
-    // Gets all unread results and pulls out an iterator to the last received result
-    List<PhotonPipelineResult> results = camera.getAllUnreadResults();
+  // public void getBestTargetLocation() {
+  //   // Gets all unread results and pulls out an iterator to the last received result
+  //   List<PhotonPipelineResult> results = cameraFront.getAllUnreadResults();
 
-    PhotonPipelineResult latestResult;
-    if (!results.isEmpty()) {
-      ListIterator<PhotonPipelineResult> iter = results.listIterator();
+  //   PhotonPipelineResult latestResult;
+  //   if (!results.isEmpty()) {
+  //     ListIterator<PhotonPipelineResult> iter = results.listIterator();
       
-      while (iter.hasNext()) {
-        PhotonPipelineResult temp = iter.next();
-        if (temp.hasTargets()) {
-          latestResult = temp;
-        }
-      }
-    }
+  //     while (iter.hasNext()) {
+  //       PhotonPipelineResult temp = iter.next();
+  //       if (temp.hasTargets()) {
+  //         latestResult = temp;
+  //         break;
+  //       }
+  //     }
+  //   }
 
-    /// @todo Return the position of the best target in "latestResult"
+  //   /// @todo Return the position of the best target in "latestResult"
 
-  }
+  // }
 
   /**
    * Get a "noisy" fake global pose reading.
@@ -90,7 +99,8 @@ public final class PhotonVisionSensor extends SubsystemBase {
   //       estimatedRobotPose.getRotation().plus(new Rotation2d(rand.get(2, 0))));
   // }
 
-  public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
+  private Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose, 
+      PhotonPoseEstimator photonPoseEstimator, PhotonCamera camera) {
     photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
     List<PhotonPipelineResult> results = camera.getAllUnreadResults();
     Optional<EstimatedRobotPose> result = Optional.empty();
@@ -100,9 +110,10 @@ public final class PhotonVisionSensor extends SubsystemBase {
       PhotonPipelineResult latestResult = iter.next();
       while (iter.hasNext()) {
         PhotonPipelineResult temp = iter.next();
-        //temp.hasTargets()
-        if (true) {
+        if (temp.hasTargets()) {
           latestResult = temp;
+          m_poseEstimateAcquired = true;
+          break;
         }
       }
 
@@ -111,17 +122,31 @@ public final class PhotonVisionSensor extends SubsystemBase {
     return result;
   }
 
-  EstimatedRobotPose getLatestEstimatedPose (Pose2d prevEstimatedRobotPose) {
-    Optional<EstimatedRobotPose> poseOption = getEstimatedGlobalPose(prevEstimatedRobotPose);
+  public Optional<EstimatedRobotPose> getEstimatedPoseFront(Pose2d prevEstimatedRobotPose) {
+    return getEstimatedGlobalPose(prevEstimatedRobotPose, m_EstimatorFront, m_cameraFront);
+  }
+
+  public Optional<EstimatedRobotPose> getEstimatedPoseBack(Pose2d prevEstimatedRobotPose) {
+    return getEstimatedGlobalPose(prevEstimatedRobotPose, m_EstimatorBack, m_cameraBack);
+  }
+
+  // this is only for troubleshooting
+  EstimatedRobotPose debugGetLatestEstimatedPose (Pose2d prevEstimatedRobotPose) {
+    Optional<EstimatedRobotPose> poseOption = getEstimatedGlobalPose(prevEstimatedRobotPose, m_EstimatorFront, m_cameraFront);
     if (poseOption.isPresent()) {
-      EstimatedRobotPose pose = poseOption.get();
-      m_latestEstimatedPose = pose;
+      m_latestEstimatedPose = poseOption.get();
+    } else {
+      poseOption = getEstimatedGlobalPose(prevEstimatedRobotPose, m_EstimatorBack, m_cameraBack);
+      if (poseOption.isPresent()) {
+        m_latestEstimatedPose = poseOption.get();
+      }
     }
     return m_latestEstimatedPose;
   }
 
   public double getPoseX(){return m_latestEstimatedPose.estimatedPose.toPose2d().getX();}
   public double getPoseY(){return m_latestEstimatedPose.estimatedPose.toPose2d().getY();}
-  String getPoseRot () {return m_latestEstimatedPose.estimatedPose.toPose2d().getRotation().toString();}
+  public String getPoseRot () {return m_latestEstimatedPose.estimatedPose.toPose2d().getRotation().toString();}
+  public boolean getPoseEstimateAcquired () {return m_poseEstimateAcquired;}
 
 }

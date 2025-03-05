@@ -173,12 +173,12 @@ public class DriveSubsystem extends SubsystemBase {
     };
   }
 
-  public void resetOdometryToVision (PhotonVisionSensor vision) {
+  public void debugResetOdometryToVision (PhotonVisionSensor vision) {
     m_odometry.update(m_gyro.getRotation2d(), getCurrentPositions());
-    EstimatedRobotPose pose = vision.getLatestEstimatedPose(getPose());
+    EstimatedRobotPose pose = vision.debugGetLatestEstimatedPose(getPose());
     while (pose.timestampSeconds == 0 || Timer.getTimestamp() - pose.timestampSeconds > 0.5) {
       // keep trying until we get a fresh pose estimate
-      pose = vision.getLatestEstimatedPose(getPose());
+      pose = vision.debugGetLatestEstimatedPose(getPose());
     }
     resetOdometry(pose.estimatedPose.toPose2d()); // was resetPose
   }
@@ -191,7 +191,13 @@ public class DriveSubsystem extends SubsystemBase {
         getCurrentPositions());
 
     // add vision data
-    Optional<EstimatedRobotPose> visionOptional = m_photon.getEstimatedGlobalPose(
+    Optional<EstimatedRobotPose> visionOptional = m_photon.getEstimatedPoseFront(
+        m_odometry.getEstimatedPosition());
+    if (visionOptional.isPresent()) {
+      EstimatedRobotPose visionPose = visionOptional.get(); 
+      m_odometry.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
+    }
+    visionOptional = m_photon.getEstimatedPoseBack(
         m_odometry.getEstimatedPosition());
     if (visionOptional.isPresent()) {
       EstimatedRobotPose visionPose = visionOptional.get(); 
@@ -333,23 +339,23 @@ public class DriveSubsystem extends SubsystemBase {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
 
-  public void setTrajectoryToProcessor(PhotonVisionSensor photon) {
-    resetOdometryToVision(photon);
-    // m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
-    //     new Pose2d(0, 0, new Rotation2d(0)),
-    //     List.of(),
-    //     new Pose2d(2, -2, new Rotation2d(0)),
-    //     m_trajectoryConfigForTeleop);
+  // public void setTrajectoryToProcessor(PhotonVisionSensor photon) {
+  //   // resetOdometryToVision(photon);
+  //   // m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
+  //   //     new Pose2d(0, 0, new Rotation2d(0)),
+  //   //     List.of(),
+  //   //     new Pose2d(2, -2, new Rotation2d(0)),
+  //   //     m_trajectoryConfigForTeleop);
 
-    Pose2d currentPose = getPose();
-    // first rotate to final orientation, then beeline to target
-    m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
-        currentPose,
-        List.of(),
-        new Pose2d(11.5, 7.0, new Rotation2d(Math.PI/2)),
-        m_trajectoryConfigForTeleop);
+  //   Pose2d currentPose = getPose();
+  //   // first rotate to final orientation, then beeline to target
+  //   m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
+  //       currentPose,
+  //       List.of(),
+  //       new Pose2d(11.5, 7.0, new Rotation2d(Math.PI/2)),
+  //       m_trajectoryConfigForTeleop);
         
-  }
+  // }
 
   public void setTrajectoryToAprilTarget(int id, PhotonVisionSensor photon) {
     //resetOdometryToVision(photon);
@@ -357,6 +363,9 @@ public class DriveSubsystem extends SubsystemBase {
     switch (id) {
       case 6: // reef
         targetX = 14.0; targetY = 2.6; rot = Math.toRadians(120);
+        break;
+      case 7: // reef
+        targetX = 14.8; targetY = 3.9; rot = Math.toRadians(180);
         break;
     }
     Pose2d currentPose = getPose();
@@ -368,9 +377,9 @@ public class DriveSubsystem extends SubsystemBase {
         
   }
   
-  public Command setTrajectoryToProcessorCmd(PhotonVisionSensor photon) {
-    return new InstantCommand(() -> setTrajectoryToProcessor(photon));
-  }
+  // public Command setTrajectoryToProcessorCmd(PhotonVisionSensor photon) {
+  //   return new InstantCommand(() -> setTrajectoryToProcessor(photon));
+  // }
   public Command setTrajectoryToAprilTargetCmd(int id, PhotonVisionSensor photon) {
     return new InstantCommand(() -> setTrajectoryToAprilTarget(id, photon));
   }

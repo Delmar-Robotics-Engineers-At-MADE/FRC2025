@@ -24,8 +24,8 @@ import frc.robot.commands.HoldElevatorCmd;
 
 public class Manipulator2BarSS extends SubsystemBase{
 
-  static final int CANIDPort = 2;
-  static final int CANIDStar = 3;
+  static final int CANIDPort = 22;
+  static final int CANIDStar = 23;
   static final int DIONumPort = 4;
   static final int DIONumStar = 5;
   static final int HomeAngle = 0;

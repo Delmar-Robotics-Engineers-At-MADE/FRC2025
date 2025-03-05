@@ -23,8 +23,8 @@ import frc.robot.commands.HoldElevatorCmd;
 
 public class ElevatorSubsystem extends SubsystemBase{
 
-  static final int CANIDPort = 1;
-  static final int CANIDStar = 4;
+  static final int CANIDPort = 20;
+  static final int CANIDStar = 21;
   static final int DIONumPort = 2;
   static final int DIONumStar = 3;
   static final int HomeAngle = 0;
@@ -41,7 +41,7 @@ public class ElevatorSubsystem extends SubsystemBase{
   private double m_holdPosPort = 0, m_holdPosStar = 0;
 
   // shuffleboard stuff
-  private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
+  private ShuffleboardTab m_matchTab = Shuffleboard.getTab("Match");
 
   public ElevatorSubsystem() {
     m_magSwitchPort = new DigitalInput(DIONumPort);
@@ -95,8 +95,8 @@ public class ElevatorSubsystem extends SubsystemBase{
     checkForHomePosition();
 
     // Dashboard indicators
-    matchTab.addBoolean("El Port Homed", () -> getHomedPort());
-    matchTab.addBoolean("El Star Homed", () -> getHomedStar());
+    m_matchTab.addBoolean("El Port Homed", () -> getHomedPort());
+    m_matchTab.addBoolean("El Star Homed", () -> getHomedStar());
 
     setDefaultCommand(new HoldElevatorCmd(this));
   

@@ -10,10 +10,18 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.Constants.LEDConstants;
+
+final class LEDConstants {
+  public static final double green = 0.77;
+  public static final double purple = 0.91;
+  public static final double red = -0.31;
+  public static final double blue = -0.29;
+  public static final double grey = -0.33;
+}
 
 public class Blinkin extends SubsystemBase {
   // private static Blinkin instance = null;
@@ -28,13 +36,17 @@ public class Blinkin extends SubsystemBase {
   // }
   private final Spark one;
   private final Spark two;
-  private final Alliance m_allianceColor;
+  // private final Alliance m_allianceColor;
   /** Creates a new Blinkin. */
   public Blinkin() {
     one = new Spark(0);
     two = new Spark(1);
-    m_allianceColor = DriverStation.getAlliance().get();
-  }
+    if(DriverStation.getAlliance().get() == Alliance.Red) {
+      setDefaultCommand(redCmd());
+    } else {
+      setDefaultCommand(blueCmd());
+    }
+}
 
   public void setColour(double input) {
     // System.out.println("Blinkin setting color to: " + input);
@@ -42,32 +54,32 @@ public class Blinkin extends SubsystemBase {
     two.set(input);
   }
 
-  public void setAllianceColor() {
+  // public void setAllianceColor() {
     
-    if(m_allianceColor == Alliance.Red) {
-      setColour(LEDConstants.red);
-    } else {
-      setColour(LEDConstants.blue);
-    }
-  }
+  //   if(m_allianceColor == Alliance.Red) {
+  //     setColour(LEDConstants.red);
+  //   } else {
+  //     setColour(LEDConstants.blue);
+  //   }
+  // }
 
-  public Command setAllianceColorCmd() {
-    return runOnce(() -> setAllianceColor());
-  }
+  // public Command setAllianceColorCmd() {
+  //   return runOnce(() -> setAllianceColor());
+  // }
 
   public Command setCmd(double colour) {
-    return runOnce(() -> setColour(colour));
+    return new RunCommand(() -> setColour(colour));
   }
 
-  public void setDefault() {
-      Optional<Alliance> alliance = DriverStation.getAlliance();
-      if(alliance.get() == Alliance.Red) {
-        super.setDefaultCommand(redCmd());
-      }
-      else {
-        super.setDefaultCommand(blueCmd());
-      }
-  }
+  // public void setDefault() {
+  //     Optional<Alliance> alliance = DriverStation.getAlliance();
+  //     if(alliance.get() == Alliance.Red) {
+  //       super.setDefaultCommand(redCmd());
+  //     }
+  //     else {
+  //       super.setDefaultCommand(blueCmd());
+  //     }
+  // }
 
   // public Command indCapture() {
   //   return new SequentialCommandGroup(
