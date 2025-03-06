@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -68,7 +68,7 @@ public class Blinkin extends SubsystemBase {
   // }
 
   public Command setCmd(double colour) {
-    return new RunCommand(() -> setColour(colour));
+    return new InstantCommand(() -> setColour(colour), this);
   }
 
   // public void setDefault() {

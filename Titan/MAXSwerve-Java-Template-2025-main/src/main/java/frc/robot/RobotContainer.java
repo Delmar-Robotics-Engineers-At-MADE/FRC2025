@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
+import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.PhotonVisionSensor;
@@ -51,6 +52,8 @@ public class RobotContainer {
   private final PhotonVisionSensor m_photon = new PhotonVisionSensor();
   private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_photon);
   private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
+  private final Blinkin m_blinkin = new Blinkin();
+
 
   // Driver
   GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
@@ -113,14 +116,10 @@ public class RobotContainer {
         .whileTrue(driveToAprilTagCommand(6, true, false));
     m_driverCmdController.button(4).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToAprilTagCommand(6, false, true));
-    // m_buttonPadCmd.button(1).and(m_photon::getPoseEstimateAcquired)
-    //     .whileTrue(driveToAprilTagCommand(6, false, false));
     m_driverCmdController.button(3).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToAprilTagCommand(7, true, false));
     m_driverCmdController.button(4).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToAprilTagCommand(7, false, true));
-    // m_buttonPadCmd.button(2).and(m_photon::getPoseEstimateAcquired)
-    //     .whileTrue(driveToAprilTagCommand(7, false, false));
 
     // new JoystickButton(m_driverController, 4) // thumb button on flight controller
     //     .whileTrue(m_robotDrive.setXCommand());
