@@ -38,9 +38,9 @@ public final class PhotonVisionSensor extends SubsystemBase {
 
   /// @todo Fill this in with the correct measurements later
   // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-  static Transform3d robotToCamFront = new Transform3d(new Translation3d(0.5, 0.0, 0.5), 
+  static Transform3d robotToCamFront = new Transform3d(new Translation3d(0.35, -.2, 0.9), 
       new Rotation3d(0,0,0));
-  static Transform3d robotToCamBack = new Transform3d(new Translation3d(0.5, 0.0, 0.5), 
+  static Transform3d robotToCamBack = new Transform3d(new Translation3d(0.35, -.2, 0.9), 
       new Rotation3d(0,0,Math.PI));
 
   static AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);    
@@ -102,22 +102,25 @@ public final class PhotonVisionSensor extends SubsystemBase {
   private Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose, 
       PhotonPoseEstimator photonPoseEstimator, PhotonCamera camera) {
     photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
-    List<PhotonPipelineResult> results = camera.getAllUnreadResults();
+    List<PhotonPipelineResult> pipelineResults = camera.getAllUnreadResults();
     Optional<EstimatedRobotPose> result = Optional.empty();
 
-    if (!results.isEmpty()) {
-      ListIterator<PhotonPipelineResult> iter = results.listIterator();
-      PhotonPipelineResult latestResult = iter.next();
+    if (!pipelineResults.isEmpty()) {
+      // System.out.println("MJS: non empty results in getEstimatedGlobalPose");
+      ListIterator<PhotonPipelineResult> iter = pipelineResults.listIterator();
+      PhotonPipelineResult latestPipelineResult = iter.next();
       while (iter.hasNext()) {
         PhotonPipelineResult temp = iter.next();
         if (temp.hasTargets()) {
-          latestResult = temp;
-          m_poseEstimateAcquired = true;
-          break;
+          latestPipelineResult = temp;
         }
       }
 
-      result = photonPoseEstimator.update(latestResult);
+      if (latestPipelineResult.hasTargets()) {
+        // System.out.println("MJS: have targets in getEstimatedGlobalPose");
+        result = photonPoseEstimator.update(latestPipelineResult);
+        m_poseEstimateAcquired = true;
+      }
     }
     return result;
   }

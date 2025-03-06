@@ -93,30 +93,37 @@ public class RobotContainer {
     // NamedCommands.registerCommand("initiateX", m_robotDrive.setXCommand());
   }
 
-  private Command driveToAprilTagCommand (int id) {
-    return m_robotDrive.setTrajectoryToAprilTargetCmd(id, m_photon)
+  private Command driveToAprilTagCommand (int id, boolean leftHorn, boolean rightHorn) {
+    return m_robotDrive.setTrajectoryToAprilTargetCmd(id, leftHorn, rightHorn, m_photon)
     .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
     .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
   }
 
   private void configureButtonBindings() {
 
-    new JoystickButton(m_driverController, Button.kR1.value)
-        .whileTrue(new RunCommand(() -> m_robotDrive.setX(),m_robotDrive));
-
-    new JoystickButton(m_driverController, 1) // red B on logitech, trigger button on flight controller
-        .whileTrue(new RunCommand(() -> m_robotDrive.zeroHeading(),m_robotDrive));
+    new JoystickButton(m_driverController, 2) // thumb button on flight controller
+        .onTrue(new InstantCommand(() -> m_robotDrive.zeroHeading(),m_robotDrive));
 
     // new JoystickButton(m_driverController, 2) // thumb button on flight controller
     //     .whileTrue(new RunCommand(() -> m_robotDrive.debugResetOdometryToVision(m_photon), m_robotDrive, m_photon));
 
-    new JoystickButton(m_buttonPad, 1).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToAprilTagCommand(6));
-    new JoystickButton(m_buttonPad, 2).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToAprilTagCommand(7));
+    // reef positions
 
-    new JoystickButton(m_driverController, 4) // thumb button on flight controller
-        .whileTrue(m_robotDrive.setXCommand());
+    m_driverCmdController.button(3).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToAprilTagCommand(6, true, false));
+    m_driverCmdController.button(4).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToAprilTagCommand(6, false, true));
+    // m_buttonPadCmd.button(1).and(m_photon::getPoseEstimateAcquired)
+    //     .whileTrue(driveToAprilTagCommand(6, false, false));
+    m_driverCmdController.button(3).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToAprilTagCommand(7, true, false));
+    m_driverCmdController.button(4).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToAprilTagCommand(7, false, true));
+    // m_buttonPadCmd.button(2).and(m_photon::getPoseEstimateAcquired)
+    //     .whileTrue(driveToAprilTagCommand(7, false, false));
+
+    // new JoystickButton(m_driverController, 4) // thumb button on flight controller
+    //     .whileTrue(m_robotDrive.setXCommand());
 
     // Manual control when Back or Start buttons are pressed
     m_operCmdController.back().or(m_operCmdController.start())
@@ -132,7 +139,11 @@ public class RobotContainer {
         .and(m_operCmdController.rightTrigger(TriggerThreshold))
         .whileTrue(m_elevator.moveOpenLoopCommand(false, false, true));
 
-    
+    // reset pose to vision
+    m_operCmdController.back().or(m_operCmdController.start())
+        .and(m_operCmdController.rightStick())
+        .onTrue(new InstantCommand (() -> m_robotDrive.debugResetOdometryToVision(m_photon), m_robotDrive, m_photon));
+
 
   }
 
@@ -179,7 +190,7 @@ public class RobotContainer {
         m_robotDrive::setModuleStates,
         m_robotDrive);
 
-    Command myCmd = m_robotDrive.setTrajectoryToAprilTargetCmd(6, m_photon)
+    Command myCmd = m_robotDrive.setTrajectoryToAprilTargetCmd(6, false, false, m_photon)
         .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
         .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 

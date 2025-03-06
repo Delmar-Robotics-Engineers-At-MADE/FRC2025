@@ -45,6 +45,10 @@ import org.photonvision.EstimatedRobotPose;
 import com.kauailabs.navx.frc.AHRS;
 
 public class DriveSubsystem extends SubsystemBase {
+
+  // Constants
+  static final double SlideToTheHornDistance = 0.2; // meters to slide left or right
+
   // Create MAXSwerveModules
   private final MAXSwerveModule m_frontLeft = new MAXSwerveModule(
       DriveConstants.kFrontLeftDrivingCanId,
@@ -357,16 +361,20 @@ public class DriveSubsystem extends SubsystemBase {
         
   // }
 
-  public void setTrajectoryToAprilTarget(int id, PhotonVisionSensor photon) {
+  public void setTrajectoryToAprilTarget(int id, boolean leftHorn, boolean rightHorn, 
+      PhotonVisionSensor photon) {
     //resetOdometryToVision(photon);
     double targetX = 0.0; double targetY = 0.0; double rot = 0.0;
     switch (id) {
-      case 6: // reef
-        targetX = 14.0; targetY = 2.6; rot = Math.toRadians(120);
-        break;
-      case 7: // reef
-        targetX = 14.8; targetY = 3.9; rot = Math.toRadians(180);
-        break;
+      case 6: targetX = 14.0; targetY = 2.6; rot = Math.toRadians(120); break;
+      case 7: targetX = 14.8; targetY = 4.1; rot = Math.toRadians(180); break;
+    }
+    if (rightHorn) {
+      targetX += Math.sin(rot) * SlideToTheHornDistance;
+      targetY -= Math.cos(rot) * SlideToTheHornDistance;
+    } else if (leftHorn) {
+      targetX -= Math.sin(rot) * SlideToTheHornDistance;
+      targetY += Math.cos(rot) * SlideToTheHornDistance;
     }
     Pose2d currentPose = getPose();
     m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
@@ -380,8 +388,9 @@ public class DriveSubsystem extends SubsystemBase {
   // public Command setTrajectoryToProcessorCmd(PhotonVisionSensor photon) {
   //   return new InstantCommand(() -> setTrajectoryToProcessor(photon));
   // }
-  public Command setTrajectoryToAprilTargetCmd(int id, PhotonVisionSensor photon) {
-    return new InstantCommand(() -> setTrajectoryToAprilTarget(id, photon));
+  public Command setTrajectoryToAprilTargetCmd(int id, boolean leftHorn, boolean rightHorn,
+      PhotonVisionSensor photon) {
+    return new InstantCommand(() -> setTrajectoryToAprilTarget(id, leftHorn, rightHorn,photon));
   }
 
   public Command getSwerveControllerCmdForTeleop(PhotonVisionSensor photon) {
