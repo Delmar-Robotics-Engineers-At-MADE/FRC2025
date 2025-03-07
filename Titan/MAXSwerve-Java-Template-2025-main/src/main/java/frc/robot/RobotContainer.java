@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -35,6 +36,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+
 
 import java.util.List;
 
@@ -54,6 +58,8 @@ public class RobotContainer {
   private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
   private final Blinkin m_blinkin = new Blinkin();
 
+  // for auto driving
+  Alliance m_allianceColor = DriverStation.getAlliance().get();
 
   // Driver
   GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
@@ -100,6 +106,17 @@ public class RobotContainer {
     return m_robotDrive.setTrajectoryToAprilTargetCmd(id, leftHorn, rightHorn, m_photon)
     .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
     .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+  }
+
+  int[] redReefPositionToAprilTag = {0, 11, 10, 9, 6, 7, 8};
+  int[] blueReefPositionToAprilTag = {0, 20, 21, 22, 19, 18, 17};
+  private Command driveToReefPositionCmd (int pos, boolean leftHorn, boolean rightHorn) {
+    int aprilTagId = 1;
+    if (m_allianceColor == Alliance.Red) {
+        return driveToAprilTagCommand (redReefPositionToAprilTag[pos], leftHorn, rightHorn);
+    } else {
+        return driveToAprilTagCommand (blueReefPositionToAprilTag[pos], leftHorn, rightHorn);
+    }
   }
 
   private void configureButtonBindings() {
