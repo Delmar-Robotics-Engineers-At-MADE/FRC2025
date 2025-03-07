@@ -107,13 +107,21 @@ public final class PhotonVisionSensor extends SubsystemBase {
 
     if (!pipelineResults.isEmpty()) {
       // System.out.println("MJS: non empty results in getEstimatedGlobalPose");
-      ListIterator<PhotonPipelineResult> iter = pipelineResults.listIterator();
-      PhotonPipelineResult latestPipelineResult = iter.next();
-      while (iter.hasNext()) {
-        PhotonPipelineResult temp = iter.next();
-        if (temp.hasTargets()) {
-          latestPipelineResult = temp;
-        }
+      int MAX_NUM_ITERATIONS = 15;
+
+      // Set the iterator to the back of the list of results and grab the last result to begin
+      ListIterator<PhotonPipelineResult> iter = pipelineResults.listIterator(pipelineResults.size());
+      PhotonPipelineResult latestPipelineResult = iter.previous();
+
+      // While:
+      // 1. The current pipeline result doesn't have targets,
+      // 2. There is another result to iterate to, and
+      // 3. We haven't exceeded our max number of iterations, 
+      // keep looking for a result with a target
+      while (!latestPipelineResult.hasTargets() && 
+             iter.hasPrevious() && 
+             (pipelineResults.size() - iter.previousIndex() + 1) < MAX_NUM_ITERATIONS) {
+        latestPipelineResult = iter.previous();
       }
 
       if (latestPipelineResult.hasTargets()) {
