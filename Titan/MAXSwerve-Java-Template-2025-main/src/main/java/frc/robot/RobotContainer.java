@@ -33,6 +33,7 @@ import frc.robot.subsystems.DriveSubsystem.HornSelection.*;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.PhotonVisionSensor;
 import frc.robot.subsystems.Blinkin.LEDConstants;
+import frc.robot.subsystems.CoralSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -42,6 +43,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
@@ -63,6 +65,7 @@ public class RobotContainer {
   private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_photon);
   private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
   private final Blinkin m_blinkin = new Blinkin();
+  private final CoralSubsystem m_coral = new CoralSubsystem();
 
   // for auto driving
   Alliance m_allianceColor = DriverStation.getAlliance().get();
@@ -92,6 +95,9 @@ public class RobotContainer {
 
     // Configure the button bindings
     configureButtonBindings();
+
+    // Configure non-button triggers
+    configureNonButtonTriggers();
 
     // setup dashboard
     setupDashboard();
@@ -144,6 +150,11 @@ public class RobotContainer {
     m_autoChooser.addOption("To Reef 2R", m_autoToReef2RToCoralStation);
     m_autoChooser.addOption("To Reef 4L", m_autoToReef4LToCoralStation);
     m_autoChooser.addOption("To Reef 4R", m_autoToReef4RToCoralStation);
+  }
+
+  private void configureNonButtonTriggers() {
+    new Trigger(() -> m_coral.getCoralPresent())
+        .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.grey));
   }
 
   private void configureButtonBindings() {

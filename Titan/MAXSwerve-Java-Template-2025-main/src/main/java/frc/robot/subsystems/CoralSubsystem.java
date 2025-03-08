@@ -27,7 +27,7 @@ import frc.robot.commands.HoldElevatorCmd;
 
 public class CoralSubsystem extends SubsystemBase{
 
-  static final int CANIDMotor = 2;
+  static final int CANIDMotor = 26;
   // static final int CANIDFusion = 1; // fusion line of flight sensor
   static final int DIONumPhotoEye = 7;
   static final double PositionTolerance = 10; // degrees
