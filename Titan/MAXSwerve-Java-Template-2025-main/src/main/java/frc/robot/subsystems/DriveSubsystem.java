@@ -93,6 +93,10 @@ public class DriveSubsystem extends SubsystemBase {
   // ********* stuff for following paths in teleop ***********
 
   private  Trajectory m_trajectoryForTeleop;
+  private int m_aprilTargetForTeleop = 0;
+  public enum HornSelection {
+    L, R, Between
+  }
 
   TrajectoryConfig m_trajectoryConfigForTeleop = new TrajectoryConfig(
       AutoConstants.kMaxSpeedMetersPerSecond/2,
@@ -114,6 +118,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_driveBaseTab.addDouble("Pose X", () -> getPoseX());
     m_driveBaseTab.addDouble("Pose Y", () -> getPoseY());
     m_driveBaseTab.addString("Rotation", () -> getPoseRot());
+    m_driveBaseTab.addInteger("April Tag Targ", () -> getAprilTagForTeleop());
   }
 
   double getPoseX () {return m_odometry.getEstimatedPosition().getX();}
@@ -361,18 +366,20 @@ public class DriveSubsystem extends SubsystemBase {
         
   // }
 
-  public void setTrajectoryToAprilTarget(int id, boolean leftHorn, boolean rightHorn, 
+  public void setTrajectoryToAprilTarget(int id, HornSelection hornSelect, 
       PhotonVisionSensor photon) {
     //resetOdometryToVision(photon);
+    m_aprilTargetForTeleop = id;
     double targetX = 0.0; double targetY = 0.0; double rot = 0.0;
     switch (id) {
       case 6: targetX = 14.0; targetY = 2.6; rot = Math.toRadians(120); break;
       case 7: targetX = 14.8; targetY = 4.1; rot = Math.toRadians(180); break;
+      case 11: targetX = 12.2; targetY = 2.5; rot = Math.toRadians(60); break;
     }
-    if (rightHorn) {
+    if (hornSelect == HornSelection.R) {
       targetX += Math.sin(rot) * SlideToTheHornDistance;
       targetY -= Math.cos(rot) * SlideToTheHornDistance;
-    } else if (leftHorn) {
+    } else if (hornSelect == HornSelection.L) {
       targetX -= Math.sin(rot) * SlideToTheHornDistance;
       targetY += Math.cos(rot) * SlideToTheHornDistance;
     }
@@ -388,9 +395,9 @@ public class DriveSubsystem extends SubsystemBase {
   // public Command setTrajectoryToProcessorCmd(PhotonVisionSensor photon) {
   //   return new InstantCommand(() -> setTrajectoryToProcessor(photon));
   // }
-  public Command setTrajectoryToAprilTargetCmd(int id, boolean leftHorn, boolean rightHorn,
+  public Command setTrajectoryToAprilTargetCmd(int id, HornSelection hornSelect,
       PhotonVisionSensor photon) {
-    return new InstantCommand(() -> setTrajectoryToAprilTarget(id, leftHorn, rightHorn,photon));
+    return new InstantCommand(() -> setTrajectoryToAprilTarget(id, hornSelect, photon));
   }
 
   public Command getSwerveControllerCmdForTeleop(PhotonVisionSensor photon) {
@@ -407,6 +414,10 @@ public class DriveSubsystem extends SubsystemBase {
 
   public Trajectory getTrajectoryForTeleop() {
     return m_trajectoryForTeleop;
+  }
+
+  public int getAprilTagForTeleop() {
+    return m_aprilTargetForTeleop;
   }
 
   public Command setXCommand() {

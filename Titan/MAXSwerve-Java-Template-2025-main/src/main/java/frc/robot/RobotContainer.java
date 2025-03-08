@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 // import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj.XboxController;
@@ -24,13 +25,18 @@ import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
+import frc.robot.commands.SetBlinkinColorCmd;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.DriveSubsystem.HornSelection;
+import frc.robot.subsystems.DriveSubsystem.HornSelection.*;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.PhotonVisionSensor;
+import frc.robot.subsystems.Blinkin.LEDConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -60,6 +66,10 @@ public class RobotContainer {
 
   // for auto driving
   Alliance m_allianceColor = DriverStation.getAlliance().get();
+  SendableChooser<Command> m_autoChooser = new SendableChooser<>();
+  Command m_autoToReef1LToCoralStation, m_autoToReef1RToCoralStation;
+  Command m_autoToReef2LToCoralStation, m_autoToReef2RToCoralStation;
+  Command m_autoToReef4LToCoralStation, m_autoToReef4RToCoralStation;
 
   // Driver
   GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
@@ -102,21 +112,38 @@ public class RobotContainer {
     // NamedCommands.registerCommand("initiateX", m_robotDrive.setXCommand());
   }
 
-  private Command driveToAprilTagCommand (int id, boolean leftHorn, boolean rightHorn) {
-    return m_robotDrive.setTrajectoryToAprilTargetCmd(id, leftHorn, rightHorn, m_photon)
+  private Command driveToAprilTagCommand (int id, HornSelection hornSelect) {
+    // System.out.println("New command to tag " + id);
+    return m_robotDrive.setTrajectoryToAprilTargetCmd(id, hornSelect, m_photon)
     .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
     .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
   }
 
   int[] redReefPositionToAprilTag = {0, 11, 10, 9, 6, 7, 8};
   int[] blueReefPositionToAprilTag = {0, 20, 21, 22, 19, 18, 17};
-  private Command driveToReefPositionCmd (int pos, boolean leftHorn, boolean rightHorn) {
-    int aprilTagId = 1;
+  private Command driveToReefPositionCmd (int pos, HornSelection hornSelect) {
     if (m_allianceColor == Alliance.Red) {
-        return driveToAprilTagCommand (redReefPositionToAprilTag[pos], leftHorn, rightHorn);
+        return driveToAprilTagCommand (redReefPositionToAprilTag[pos], hornSelect);
     } else {
-        return driveToAprilTagCommand (blueReefPositionToAprilTag[pos], leftHorn, rightHorn);
+        return driveToAprilTagCommand (blueReefPositionToAprilTag[pos], hornSelect);
     }
+  }
+
+  private void buildAutoChooser() {
+    m_autoToReef1LToCoralStation = new WaitUntilCommand(() -> m_photon.getPoseEstimateAcquired())
+        .andThen(driveToReefPositionCmd(1, HornSelection.L))
+        .andThen(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
+    m_autoToReef1RToCoralStation = driveToReefPositionCmd(1, HornSelection.R);
+    m_autoToReef2LToCoralStation = driveToReefPositionCmd(2, HornSelection.L);
+    m_autoToReef2RToCoralStation = driveToReefPositionCmd(2, HornSelection.R);
+    m_autoToReef4LToCoralStation = driveToReefPositionCmd(4, HornSelection.L);
+    m_autoToReef4RToCoralStation = driveToReefPositionCmd(4, HornSelection.R);
+    m_autoChooser.setDefaultOption("To Reef 1L", m_autoToReef1LToCoralStation);
+    m_autoChooser.addOption("To Reef 1R", m_autoToReef1RToCoralStation);
+    m_autoChooser.addOption("To Reef 2L", m_autoToReef2LToCoralStation);
+    m_autoChooser.addOption("To Reef 2R", m_autoToReef2RToCoralStation);
+    m_autoChooser.addOption("To Reef 4L", m_autoToReef4LToCoralStation);
+    m_autoChooser.addOption("To Reef 4R", m_autoToReef4RToCoralStation);
   }
 
   private void configureButtonBindings() {
@@ -128,15 +155,30 @@ public class RobotContainer {
     //     .whileTrue(new RunCommand(() -> m_robotDrive.debugResetOdometryToVision(m_photon), m_robotDrive, m_photon));
 
     // reef positions
-
+    m_driverCmdController.button(3).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(1, HornSelection.L));
+    m_driverCmdController.button(4).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(1, HornSelection.R));
+    m_driverCmdController.button(3).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(2, HornSelection.L));
+    m_driverCmdController.button(4).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(2, HornSelection.R));
+    m_driverCmdController.button(3).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(3, HornSelection.L));
+    m_driverCmdController.button(4).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(3, HornSelection.R));
     m_driverCmdController.button(3).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToAprilTagCommand(6, true, false));
+        .whileTrue(driveToReefPositionCmd(4, HornSelection.L));
     m_driverCmdController.button(4).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToAprilTagCommand(6, false, true));
-    m_driverCmdController.button(3).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToAprilTagCommand(7, true, false));
+        .whileTrue(driveToReefPositionCmd(4, HornSelection.R));
+        m_driverCmdController.button(3).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(5, HornSelection.L));
     m_driverCmdController.button(4).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToAprilTagCommand(7, false, true));
+        .whileTrue(driveToReefPositionCmd(5, HornSelection.R));
+    m_driverCmdController.button(3).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(6, HornSelection.L));
+    m_driverCmdController.button(4).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(6, HornSelection.R));
 
     // new JoystickButton(m_driverController, 4) // thumb button on flight controller
     //     .whileTrue(m_robotDrive.setXCommand());
@@ -171,49 +213,52 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // Create config for trajectory
-    TrajectoryConfig config = new TrajectoryConfig(
-        AutoConstants.kMaxSpeedMetersPerSecond/4,
-        AutoConstants.kMaxAccelerationMetersPerSecondSquared/2)
-        // Add kinematics to ensure max speed is actually obeyed
-        .setKinematics(DriveConstants.kDriveKinematics);
+    // TrajectoryConfig config = new TrajectoryConfig(
+    //     AutoConstants.kMaxSpeedMetersPerSecond/4,
+    //     AutoConstants.kMaxAccelerationMetersPerSecondSquared/2)
+    //     // Add kinematics to ensure max speed is actually obeyed
+    //     .setKinematics(DriveConstants.kDriveKinematics);
 
-    // An example trajectory to follow. All units in meters.
-    Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
-        // Start at the origin facing the +X direction
-        new Pose2d(0, 0, new Rotation2d(0)),
-        // Pass through these two interior waypoints, making an 's' curve path
-        List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
-        // End 3 meters straight ahead of where we started, facing forward
-        new Pose2d(3, 0, new Rotation2d(0)),
-        config);
+    // // An example trajectory to follow. All units in meters.
+    // Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
+    //     // Start at the origin facing the +X direction
+    //     new Pose2d(0, 0, new Rotation2d(0)),
+    //     // Pass through these two interior waypoints, making an 's' curve path
+    //     List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
+    //     // End 3 meters straight ahead of where we started, facing forward
+    //     new Pose2d(3, 0, new Rotation2d(0)),
+    //     config);
     
-    var thetaController = new ProfiledPIDController(
-        AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
-    thetaController.enableContinuousInput(-Math.PI, Math.PI);
+    // var thetaController = new ProfiledPIDController(
+    //     AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
+    // thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-    // Command resetPoseCommand = new InstantCommand(() -> 
-    //     m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose()));
+    // // Command resetPoseCommand = new InstantCommand(() -> 
+    // //     m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose()));
 
-    SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
-        exampleTrajectory,
-        m_robotDrive::getPose, // Functional interface to feed supplier
-        DriveConstants.kDriveKinematics,
+    // SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
+    //     exampleTrajectory,
+    //     m_robotDrive::getPose, // Functional interface to feed supplier
+    //     DriveConstants.kDriveKinematics,
 
-        // Position controllers
-        new PIDController(AutoConstants.kPXController, 0, 0),
-        new PIDController(AutoConstants.kPYController, 0, 0),
-        thetaController,
-        m_robotDrive::setModuleStates,
-        m_robotDrive);
+    //     // Position controllers
+    //     new PIDController(AutoConstants.kPXController, 0, 0),
+    //     new PIDController(AutoConstants.kPYController, 0, 0),
+    //     thetaController,
+    //     m_robotDrive::setModuleStates,
+    //     m_robotDrive);
 
-    Command myCmd = m_robotDrive.setTrajectoryToAprilTargetCmd(6, false, false, m_photon)
-        .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
-        .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+    // Command myCmd = m_robotDrive.setTrajectoryToAprilTargetCmd(6, false, false, m_photon)
+    //     .andThen(m_robotDrive.getSwerveControllerCmdForTeleop(m_photon))
+    //     .andThen(() -> m_robotDrive.drive(0, 0, 0, false));
 
-    return myCmd; // m_autoChooser.getSelected();
+    return m_autoChooser.getSelected();
   }
 
   private void setupDashboard() {
-    Shuffleboard.getTab("Match").addCamera("Limelight", "Limelight", "http://10.80.77.18:5800");
+    ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
+    matchTab.addCamera("Limelight", "Limelight", "http://10.80.77.18:5800");
+    buildAutoChooser();
+    matchTab.add(m_autoChooser);
   }
 }
