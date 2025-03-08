@@ -4,29 +4,29 @@
 
 package frc.robot.commands;
 
-import frc.robot.subsystems.Manipulator2BarSS;
+import frc.robot.subsystems.CoralSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /** An example command that uses an example subsystem. */
-public class Hold2BarCmd extends Command {
-  private final Manipulator2BarSS m_manip;
+public class HoldCoralCmd extends Command {
+  private final CoralSubsystem m_coral;
 
   /**
    * Creates a new ExampleCommand.
    *
    * @param subsystem The subsystem used by this command.
    */
-  public Hold2BarCmd(Manipulator2BarSS manip) {
-    m_manip = manip;
+  public HoldCoralCmd(CoralSubsystem coral) {
+    m_coral = coral;
     // Use addRequirements() here to declare subsystem dependencies.
-    addRequirements(manip);
+    addRequirements(coral);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    // just need to do this one, with once check of current position
-    m_manip.holdCurrentPosition(); 
+    // just need to do this once, with one check of current position
+    m_coral.holdCurrentPosition(); 
   }
   
   // Called every time the scheduler runs while the command is scheduled.

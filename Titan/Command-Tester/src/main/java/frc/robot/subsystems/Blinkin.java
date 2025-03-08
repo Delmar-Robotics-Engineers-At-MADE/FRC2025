@@ -10,19 +10,23 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-
-final class LEDConstants {
-  public static final double green = 0.77;
-  public static final double purple = 0.91;
-  public static final double red = -0.31;
-  public static final double blue = -0.29;
-  public static final double grey = -0.33;
-}
+import frc.robot.commands.SetBlinkinColorCmd;
 
 public class Blinkin extends SubsystemBase {
+
+  public static final class LEDConstants {
+    public static final double green = 0.77;
+    public static final double purple = 0.91;
+    public static final double red = -0.31;
+    public static final double blue = -0.29;
+    public static final double grey = -0.33;
+  }
+  
   // private static Blinkin instance = null;
   // public Blinkin getInstance() {
   //   if (instance == null) {
@@ -41,13 +45,13 @@ public class Blinkin extends SubsystemBase {
     one = new Spark(0);
     two = new Spark(1);
     if(DriverStation.getAlliance().get() == Alliance.Red) {
-      setDefaultCommand(redCmd());
+      setDefaultCommand(new SetBlinkinColorCmd(this, LEDConstants.red));
     } else {
-      setDefaultCommand(blueCmd());
+      setDefaultCommand(new SetBlinkinColorCmd(this, LEDConstants.blue));
     }
 }
 
-  public void setColour(double input) {
+  public void setColor(double input) {
     // System.out.println("Blinkin setting color to: " + input);
     one.set(input);
     two.set(input);
@@ -56,9 +60,9 @@ public class Blinkin extends SubsystemBase {
   // public void setAllianceColor() {
     
   //   if(m_allianceColor == Alliance.Red) {
-  //     setColour(LEDConstants.red);
+  //     setColor(LEDConstants.red);
   //   } else {
-  //     setColour(LEDConstants.blue);
+  //     setColor(LEDConstants.blue);
   //   }
   // }
 
@@ -66,9 +70,9 @@ public class Blinkin extends SubsystemBase {
   //   return runOnce(() -> setAllianceColor());
   // }
 
-  public Command setCmd(double colour) {
-    return runOnce(() -> setColour(colour));
-  }
+  // public Command setCmd(double color) {
+  //   return new RunCommand(() -> setColor(color), this);
+  // }
 
   // public void setDefault() {
   //     Optional<Alliance> alliance = DriverStation.getAlliance();
@@ -91,19 +95,19 @@ public class Blinkin extends SubsystemBase {
   //   );
   // }
 
-  public Command purpleCmd() {
-    return setCmd(LEDConstants.purple);
-  }
+  // public Command purpleCmd() {
+  //   return setCmd(LEDConstants.purple);
+  // }
 
-  public Command greenCmd() {
-    return setCmd(LEDConstants.green);
-  }
+  // public Command greenCmd() {
+  //   return setCmd(LEDConstants.green);
+  // }
 
-  public Command redCmd() {
-    return setCmd(LEDConstants.red);
-  }
+  // public Command redCmd() {
+  //   return setCmd(LEDConstants.red);
+  // }
 
-  public Command blueCmd() {
-    return setCmd(LEDConstants.blue);
-  }
+  // public Command blueCmd() {
+  //   return setCmd(LEDConstants.blue);
+  // }
 }

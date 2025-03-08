@@ -7,10 +7,12 @@ package frc.robot;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.SetBlinkinColorCmd;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
-import frc.robot.subsystems.Manipulator2BarSS;
+import frc.robot.subsystems.Blinkin.LEDConstants;
+import frc.robot.subsystems.CoralSubsystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,7 +35,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final Blinkin m_exampleSubsystem2 = new Blinkin();
-  private final Manipulator2BarSS m_exampleSubsystem3 = new Manipulator2BarSS();
+  private final CoralSubsystem m_exampleSubsystem3 = new CoralSubsystem();
 
   // Driver
   GenericHID m_driverController = new GenericHID(0);
@@ -65,6 +67,9 @@ public class RobotContainer {
     new Trigger(m_exampleSubsystem::exampleCondition)
         .onTrue(new ExampleCommand(m_exampleSubsystem));
 
+    new Trigger(() -> m_exampleSubsystem3.getCoralPresent())
+        .whileTrue(new SetBlinkinColorCmd(m_exampleSubsystem2, LEDConstants.green));
+
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     m_operCmdController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
@@ -73,13 +78,12 @@ public class RobotContainer {
 
     // Manual control when Back or Start buttons are pressed
         
-    m_operCmdController.back().or(m_operCmdController.start())
-        .and(m_operCmdController.leftBumper())
-        .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(true));
-    m_operCmdController.back().or(m_operCmdController.start())
-        .and(m_operCmdController.leftTrigger(TriggerThreshold))
-        .whileTrue(m_exampleSubsystem3.moveOpenLoopCommand(false));
+    m_operCmdController.leftBumper().and(() -> !m_exampleSubsystem3.getCoralPresent())
+        .whileTrue(m_exampleSubsystem3.moveVelocityCommand(true));
+    m_operCmdController.leftTrigger(TriggerThreshold)
+        .whileTrue(m_exampleSubsystem3.moveVelocityCommand(false));
 
+    
   }
 
   /**

@@ -28,7 +28,7 @@ public class ElevatorSubsystem extends SubsystemBase{
   static final int DIONumPort = 2;
   static final int DIONumStar = 3;
   static final int HomeAngle = 0;
-  static final double OpenLoopV = 10000;  // degrees per minute
+  static final double VelocityV = 10000;  // degrees per minute
   static final double MRTOORTD = 360 / 5.49; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motorPort, m_motorStar;
@@ -132,13 +132,13 @@ public class ElevatorSubsystem extends SubsystemBase{
     }
   }
 
-  public void moveOpenLoop (boolean port, boolean starboard) {
+  public void moveVelocity (boolean port, boolean starboard) {
 
     if (port && starboard) {System.out.println("moving both elevator motors");}
 
     if (port) {
       if (!m_homedPort) {  // ok to move manually
-        closedLoopPort.setReference(OpenLoopV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+        closedLoopPort.setReference(VelocityV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
       } else {
         closedLoopPort.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
         System.out.println("************* Port elevator homed, can't move manually **********");
@@ -147,7 +147,7 @@ public class ElevatorSubsystem extends SubsystemBase{
 
     if (starboard) {
       if (!m_homedStar) {  // ok to move manually
-        closedLoopStar.setReference(OpenLoopV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+        closedLoopStar.setReference(VelocityV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
       } else {
         closedLoopStar.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
         System.out.println("************* Starboard elevator homed, can't move manually **********");
@@ -157,8 +157,8 @@ public class ElevatorSubsystem extends SubsystemBase{
     checkForHomePosition();
   }
 
-  public Command moveOpenLoopCommand(boolean port, boolean starboard) {
-    return new RunCommand(() -> moveOpenLoop(port, starboard), this);
+  public Command moveVelocityCommand(boolean port, boolean starboard) {
+    return new RunCommand(() -> moveVelocity(port, starboard), this);
   }
 
   public boolean getHomedPort () {return m_homedPort;}
