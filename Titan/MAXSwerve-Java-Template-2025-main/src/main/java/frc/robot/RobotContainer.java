@@ -159,11 +159,10 @@ public class RobotContainer {
 
   private void configureButtonBindings() {
 
+    // *************************** DRIVER *****************************
+
     new JoystickButton(m_driverController, 2) // thumb button on flight controller
         .onTrue(new InstantCommand(() -> m_robotDrive.zeroHeading(),m_robotDrive));
-
-    // new JoystickButton(m_driverController, 2) // thumb button on flight controller
-    //     .whileTrue(new RunCommand(() -> m_robotDrive.debugResetOdometryToVision(m_photon), m_robotDrive, m_photon));
 
     // reef positions
     m_driverCmdController.button(3).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
@@ -191,22 +190,33 @@ public class RobotContainer {
     m_driverCmdController.button(4).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(6, HornSelection.R));
 
-    // new JoystickButton(m_driverController, 4) // thumb button on flight controller
-    //     .whileTrue(m_robotDrive.setXCommand());
+    // Coral stations and Processor
+
+    // set X
+    m_driverCmdController.povUp().whileTrue(m_robotDrive.setXCommand());
+
+    // ******************************** OPERATOR *********************************
+
+    // coral in/out
+    m_operCmdController.leftBumper().and(() -> !m_coral.getCoralPresent())
+        .whileTrue(m_coral.moveVelocityCommand(true));
+    m_operCmdController.leftTrigger(TriggerThreshold)
+        .whileTrue(m_coral.moveVelocityCommand(false));
+
 
     // Manual control when Back or Start buttons are pressed
     m_operCmdController.back().or(m_operCmdController.start())
         .and(m_operCmdController.leftBumper())
-        .whileTrue(m_elevator.moveOpenLoopCommand(true, true, false));
+        .whileTrue(m_elevator.moveVelocityCommand(true, true, false));
     m_operCmdController.back().or(m_operCmdController.start())
         .and(m_operCmdController.rightBumper())
-        .whileTrue(m_elevator.moveOpenLoopCommand(true, false, true));
+        .whileTrue(m_elevator.moveVelocityCommand(true, false, true));
     m_operCmdController.back().or(m_operCmdController.start())
         .and(m_operCmdController.leftTrigger(TriggerThreshold))
-        .whileTrue(m_elevator.moveOpenLoopCommand(false, true, false));
+        .whileTrue(m_elevator.moveVelocityCommand(false, true, false));
     m_operCmdController.back().or(m_operCmdController.start())
         .and(m_operCmdController.rightTrigger(TriggerThreshold))
-        .whileTrue(m_elevator.moveOpenLoopCommand(false, false, true));
+        .whileTrue(m_elevator.moveVelocityCommand(false, false, true));
 
     // reset pose to vision
     m_operCmdController.back().or(m_operCmdController.start())

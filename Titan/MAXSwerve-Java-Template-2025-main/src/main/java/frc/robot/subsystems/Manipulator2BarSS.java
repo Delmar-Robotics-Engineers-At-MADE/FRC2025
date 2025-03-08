@@ -30,7 +30,7 @@ public class Manipulator2BarSS extends SubsystemBase{
   static final int DIONumStar = 5;
   static final int HomeAngle = 0;
   static final double PositionTolerance = 10; // degrees
-  static final double OpenLoopV = 10000;  // degrees per minute
+  static final double VelocityV = 10000;  // degrees per minute
   static final double MRTOORTD = 360 / 27.46; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motorPort, m_motorStar;
@@ -126,10 +126,10 @@ public class Manipulator2BarSS extends SubsystemBase{
     }
   }
 
-  public void moveOpenLoop (boolean up) {
+  public void moveVelocity (boolean up) {
     System.out.println("2 bar moving open loop");
     if (!m_homedPort || !m_homedStar) {  // ok to move manually
-      closedLoopController.setReference(OpenLoopV * (up?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+      closedLoopController.setReference(VelocityV * (up?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
     } else {
       closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
       System.out.println("************* 2 bar homed, can't move manually **********");
@@ -138,8 +138,8 @@ public class Manipulator2BarSS extends SubsystemBase{
     checkForHomePosition();
   }
 
-  public Command moveOpenLoopCommand(boolean up) {
-    return new RunCommand(() -> moveOpenLoop(up), this);
+  public Command moveVelocityCommand(boolean up) {
+    return new RunCommand(() -> moveVelocity(up), this);
   }
 
   public boolean getHomedPort () {return m_homedPort;}
