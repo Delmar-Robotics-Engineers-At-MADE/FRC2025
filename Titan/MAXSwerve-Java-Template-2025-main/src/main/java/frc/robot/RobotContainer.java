@@ -5,15 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -21,16 +12,12 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 // import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
-import frc.robot.Constants.AutoConstants;
-import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.SetBlinkinColorCmd;
 import frc.robot.subsystems.AlgaeConveyerSS;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.DriveSubsystem.HornSelection;
-import frc.robot.subsystems.DriveSubsystem.HornSelection.*;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.PhotonVisionSensor;
 import frc.robot.subsystems.Blinkin.LEDConstants;
@@ -39,17 +26,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-
-
-import java.util.List;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -60,6 +40,7 @@ import java.util.List;
 public class RobotContainer {
 
   static final double TriggerThreshold = 0.5;
+  static final double PovSpeed = 0.4;
 
   // The robot's subsystems
   private final PhotonVisionSensor m_photon = new PhotonVisionSensor();
@@ -173,7 +154,8 @@ public class RobotContainer {
         .whileTrue(driveToReefPositionCmd(1, HornSelection.L));
     m_driverCmdController.button(4).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(1, HornSelection.R));
-    m_driverCmdController.povUp().and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight())
+        .and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(1, HornSelection.Between));
     m_driverCmdController.button(3).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(2, HornSelection.L));
@@ -204,8 +186,20 @@ public class RobotContainer {
         .andThen(m_algaeConv.moveVelocityCommand(true)));
 
     // set X
-    m_driverCmdController.povUp().whileTrue(m_robotDrive.setXCommand());
+    m_driverCmdController.povDown().or(m_driverCmdController.povDownLeft())
+        .or(m_driverCmdController.povDownRight())
+        .whileTrue(m_robotDrive.setXCommand());
 
+    // drive robot relative in cardinal directions
+    m_buttonPadCmd.povLeft().whileTrue(new RunCommand(
+        () -> m_robotDrive.drive(PovSpeed, 0, 0, false),m_robotDrive));
+    m_buttonPadCmd.povRight().whileTrue(new RunCommand(
+        () -> m_robotDrive.drive(-PovSpeed, 0, 0, false),m_robotDrive));
+    m_buttonPadCmd.povUp().whileTrue(new RunCommand(
+        () -> m_robotDrive.drive(0, PovSpeed, 0, false),m_robotDrive));
+    m_buttonPadCmd.povDown().whileTrue(new RunCommand(
+        () -> m_robotDrive.drive(0, -PovSpeed, 0, false),m_robotDrive));
+                    
     // ******************************** OPERATOR *********************************
 
     // coral in/out
