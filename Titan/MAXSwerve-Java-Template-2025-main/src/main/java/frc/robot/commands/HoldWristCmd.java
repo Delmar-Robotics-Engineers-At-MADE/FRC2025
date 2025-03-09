@@ -4,29 +4,29 @@
 
 package frc.robot.commands;
 
-import frc.robot.subsystems.AlgaeConveyerSS;
+import frc.robot.subsystems.WristSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /** An example command that uses an example subsystem. */
-public class HoldAlgaeCmd extends Command {
-  private final AlgaeConveyerSS m_algae;
+public class HoldWristCmd extends Command {
+  private final WristSubsystem m_wrist;
 
   /**
    * Creates a new ExampleCommand.
    *
    * @param subsystem The subsystem used by this command.
    */
-  public HoldAlgaeCmd(AlgaeConveyerSS algae) {
-    m_algae = algae;
+  public HoldWristCmd(WristSubsystem wrist) {
+    m_wrist = wrist;
     // Use addRequirements() here to declare subsystem dependencies.
-    addRequirements(algae);
+    addRequirements(wrist);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    // just need to do this once, with one check of current position
-    m_algae.holdCurrentPosition(); 
+    // just need to do this one, with once check of current position
+    m_wrist.holdCurrentPosition(); 
   }
   
   // Called every time the scheduler runs while the command is scheduled.

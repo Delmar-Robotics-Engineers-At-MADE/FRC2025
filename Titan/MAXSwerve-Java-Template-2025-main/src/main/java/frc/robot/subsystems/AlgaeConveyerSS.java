@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+// import com.playingwithfusion.TimeOfFlight;
+// import com.playingwithfusion.TimeOfFlight.RangingMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -17,35 +19,38 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.commands.HoldWristCmd;
+import frc.robot.commands.HoldAlgaeCmd;
 
-public class WristSubsystem extends SubsystemBase{
+public class AlgaeConveyerSS extends SubsystemBase{
 
-  static final int CANIDPort = 2;
-  static final int CANIDStar = 3;
-  static final int DIONum = 0;
-  static final int HomeAngle = 0;
+  static final int CANIDConveyerPort = 27;
+  static final int CANIDConveyerStar = 28;
+  // static final int CANIDFusion = 1;  fusion line of flight sensor
+  static final int DIONumPhotoEye = 6;
   static final double PositionTolerance = 10; // degrees
   static final double VelocityV = 10000;  // degrees per minute
-  static final double MRTOORTD = 360 / 6; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
+  static final double MRTOORTD = 360 / 20; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motorPort, m_motorStar;
   private SparkMaxConfig motorConfig;
   private SparkClosedLoopController closedLoopController;
-  private RelativeEncoder m_encoderPort;
-  private DigitalInput m_photoEye;
-  private boolean m_homed = false;
+  private RelativeEncoder m_encoder;
   private double m_holdPosition = 0;
+  private DigitalInput m_photoEye;
+  // private final TimeOfFlight m_tofSensor;
 
   // shuffleboard stuff
   private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
 
-  public WristSubsystem() {
-    m_photoEye = new DigitalInput(DIONum);
-    m_motorPort = new SparkMax(CANIDPort, MotorType.kBrushless);
-    m_motorStar = new SparkMax(CANIDStar, MotorType.kBrushless);
+  public AlgaeConveyerSS() {
+    m_photoEye = new DigitalInput(DIONumPhotoEye);
+    // m_tofSensor = new TimeOfFlight(CANIDFusion);
+    // m_tofSensor.setRangingMode(RangingMode.Short, 200); // msecs
+
+    m_motorPort = new SparkMax(CANIDConveyerPort, MotorType.kBrushless);
+    m_motorStar = new SparkMax(CANIDConveyerStar, MotorType.kBrushless);
     closedLoopController = m_motorPort.getClosedLoopController();
-    m_encoderPort = m_motorPort.getEncoder();
+    m_encoder = m_motorPort.getEncoder();
 
     motorConfig = new SparkMaxConfig();
     motorConfig.encoder
@@ -81,57 +86,30 @@ public class WristSubsystem extends SubsystemBase{
     m_motorPort.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // second motor inverted and following first
-    motorConfig.follow(CANIDPort, true);
+    motorConfig.follow(CANIDConveyerPort, true);
     m_motorStar.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-
-    // Already homed?  Hope so, at beginning of match
-    checkForHomePosition();
-
+    
     // Dashboard indicators
-    matchTab.addBoolean("Wrist Homed", () -> getHomed());
+    matchTab.addBoolean("Algae Present", () -> getAlgaePresent());
 
-    setDefaultCommand(new HoldWristCmd(this));
+    setDefaultCommand(new HoldAlgaeCmd(this));
   
   }
 
   public void holdCurrentPosition () {
-    m_holdPosition = m_encoderPort.getPosition();
-    System.out.println("Wrist holding current position " + m_holdPosition);
+    System.out.println("algae holding current position");
+    m_holdPosition = m_encoder.getPosition();
     closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
   }
 
-  private void checkForHomePosition () {
-    System.out.println("checking home of wrist");
-    if (!m_homed && m_photoEye.get() == false) { // false means pressed
-      m_homed = true;
-      m_encoderPort.setPosition(HomeAngle);
-    }
+  public void moveVelocityControl (boolean in) {
+    closedLoopController.setReference(VelocityV * (in?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
   }
 
-  public void moveToPosition (double angle) {
-    if (m_homed) {
-      closedLoopController.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0);
-    } else {
-      System.out.println("************* Wrist motor not homed, can't move to position **********");
-    }
+  public Command moveVelocityCommand(boolean in) {
+    return new RunCommand(() -> moveVelocityControl(in), this);
   }
 
-  public void moveVelocity (boolean up) {
-    System.out.println("Wrist moving open loop");
-    if (!m_homed) {  // ok to move manually
-      closedLoopController.setReference(VelocityV * (up?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
-    } else {
-      closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
-      System.out.println("************* Wrist homed, can't move manually **********");
-    }
-
-    checkForHomePosition();
-  }
-
-  public Command moveVelocityCommand(boolean up) {
-    return new RunCommand(() -> moveVelocity(up), this);
-  }
-
-  public boolean getHomed () {return m_homed;}
+  public boolean getAlgaePresent () {return m_photoEye.get() == false;}
 
 }

@@ -13,42 +13,38 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.commands.HoldAlgaeCmd;
 
-public class AlgaeSubsystem extends SubsystemBase{
+public class AlgaeShooterSS extends SubsystemBase{
 
-  static final int CANIDMotor = 27;
-  // static final int CANIDFusion = 1; // fusion line of flight sensor
+  static final int CANIDShooterPort = 29;
+  static final int CANIDShooterStar = 30;
+  // static final int CANIDFusion = 1;  fusion line of flight sensor
   static final int DIONumPhotoEye = 6;
   static final double PositionTolerance = 10; // degrees
+  static final double VelocityTolerance = 10000; // degrees per minute
   static final double VelocityV = 10000;  // degrees per minute
-  static final double MRTOORTD = 360 / 20; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
+  static final double MRTOORTD = 360 / 3; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
-  private SparkMax m_motor;
+  private SparkMax m_motorPort, m_motorStar;
   private SparkMaxConfig motorConfig;
   private SparkClosedLoopController closedLoopController;
   private RelativeEncoder m_encoder;
-  private double m_holdPosition = 0;
-  private DigitalInput m_photoEye;
   // private final TimeOfFlight m_tofSensor;
 
   // shuffleboard stuff
   private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
 
-  public AlgaeSubsystem() {
-    m_photoEye = new DigitalInput(DIONumPhotoEye);
-    // m_tofSensor = new TimeOfFlight(CANIDFusion);
-    // m_tofSensor.setRangingMode(RangingMode.Short, 200); // msecs
+  public AlgaeShooterSS() {
 
-    m_motor = new SparkMax(CANIDMotor, MotorType.kBrushless);
-    closedLoopController = m_motor.getClosedLoopController();
-    m_encoder = m_motor.getEncoder();
+    m_motorPort = new SparkMax(CANIDShooterPort, MotorType.kBrushless);
+    m_motorStar = new SparkMax(CANIDShooterStar, MotorType.kBrushless);
+    closedLoopController = m_motorPort.getClosedLoopController();
+    m_encoder = m_motorPort.getEncoder();
 
     motorConfig = new SparkMaxConfig();
     motorConfig.encoder
@@ -79,21 +75,17 @@ public class AlgaeSubsystem extends SubsystemBase{
         // Set MAXMotion parameters for velocity control in slot 1
         .maxAcceleration(500*MRTOORTD, ClosedLoopSlot.kSlot1)
         .maxVelocity(6000*MRTOORTD, ClosedLoopSlot.kSlot1)
-        .allowedClosedLoopError(MRTOORTD, ClosedLoopSlot.kSlot1); // degrees per sec
+        .allowedClosedLoopError(VelocityTolerance, ClosedLoopSlot.kSlot1); // degrees per sec
 
-    m_motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    m_motorPort.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
+    // second motor inverted and following first
+    motorConfig.follow(CANIDShooterPort, true);
+    m_motorStar.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    
     // Dashboard indicators
-    matchTab.addBoolean("Algae Present", () -> getAlgaePresent());
+    matchTab.addBoolean("Shooter Ready", () -> getVelocityReady());
 
-    setDefaultCommand(new HoldAlgaeCmd(this));
-  
-  }
-
-  public void holdCurrentPosition () {
-    System.out.println("algae holding current position");
-    m_holdPosition = m_encoder.getPosition();
-    closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
   }
 
   public void moveVelocityControl (boolean in) {
@@ -104,6 +96,8 @@ public class AlgaeSubsystem extends SubsystemBase{
     return new RunCommand(() -> moveVelocityControl(in), this);
   }
 
-  public boolean getAlgaePresent () {return m_photoEye.get() == false;}
+  public boolean getVelocityReady () {
+    return (Math.abs(m_encoder.getVelocity() - VelocityV) < VelocityTolerance) ;  
+  }
 
 }

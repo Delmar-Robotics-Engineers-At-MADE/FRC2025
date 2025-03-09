@@ -26,7 +26,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.SetBlinkinColorCmd;
-import frc.robot.subsystems.AlgaeSubsystem;
+import frc.robot.subsystems.AlgaeConveyerSS;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.DriveSubsystem.HornSelection;
@@ -67,7 +67,7 @@ public class RobotContainer {
   private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
   private final Blinkin m_blinkin = new Blinkin();
   private final CoralSubsystem m_coral = new CoralSubsystem();
-  private final AlgaeSubsystem m_algae = new AlgaeSubsystem();
+  private final AlgaeConveyerSS m_algaeConv = new AlgaeConveyerSS();
 
   // for auto driving
 //   Alliance m_allianceColor = DriverStation.getAlliance().get();
@@ -157,7 +157,7 @@ public class RobotContainer {
   private void configureNonButtonTriggers() {
     new Trigger(() -> m_coral.getCoralPresent())
         .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.grey));
-    new Trigger(() -> m_algae.getAlgaePresent())
+    new Trigger(() -> m_algaeConv.getAlgaePresent())
         .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
   }
 
@@ -200,8 +200,8 @@ public class RobotContainer {
 
     // intake algae
     m_driverCmdController.button(1)
-        .whileTrue(new WaitUntilCommand(() -> !m_algae.getAlgaePresent())
-        .andThen(m_algae.moveVelocityCommand(true)));
+        .whileTrue(new WaitUntilCommand(() -> !m_algaeConv.getAlgaePresent())
+        .andThen(m_algaeConv.moveVelocityCommand(true)));
 
     // set X
     m_driverCmdController.povUp().whileTrue(m_robotDrive.setXCommand());
@@ -216,16 +216,16 @@ public class RobotContainer {
 
     // algae in/out
     m_operCmdController.a().and(m_operCmdController.povLeft()) // spit algae front
-        .whileTrue(new WaitUntilCommand(() -> m_algae.getAlgaePresent())
-        .andThen(m_algae.moveVelocityCommand(false)));
+        .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
+        .andThen(m_algaeConv.moveVelocityCommand(false)));
 
     m_operCmdController.a().and(m_operCmdController.povDown()) // spit algae rear
-        .whileTrue(new WaitUntilCommand(() -> m_algae.getAlgaePresent())
-        .andThen(m_algae.moveVelocityCommand(true)));
+        .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
+        .andThen(m_algaeConv.moveVelocityCommand(true)));
 
     m_operCmdController.a().and(m_operCmdController.povUp()) // shoot algae
-        .whileTrue(new WaitUntilCommand(() -> m_algae.getAlgaePresent())
-        .andThen(m_algae.moveVelocityCommand(false)));
+        .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
+        .andThen(m_algaeConv.moveVelocityCommand(false)));
 
     // Manual control when Back or Start buttons are pressed
     m_operCmdController.back().or(m_operCmdController.start())

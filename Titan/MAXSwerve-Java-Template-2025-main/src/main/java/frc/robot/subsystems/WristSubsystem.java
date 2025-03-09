@@ -21,9 +21,9 @@ import frc.robot.commands.HoldWristCmd;
 
 public class WristSubsystem extends SubsystemBase{
 
-  static final int CANIDPort = 2;
-  static final int CANIDStar = 3;
-  static final int DIONum = 0;
+  static final int CANIDPort = 24;
+  static final int CANIDStar = 25;
+  static final int DIONum = 8;
   static final int HomeAngle = 0;
   static final double PositionTolerance = 10; // degrees
   static final double VelocityV = 10000;  // degrees per minute
