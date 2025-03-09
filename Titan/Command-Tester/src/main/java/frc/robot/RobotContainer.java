@@ -9,10 +9,9 @@ import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.commands.SetBlinkinColorCmd;
 import frc.robot.subsystems.Blinkin;
-import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.Blinkin.LEDConstants;
-import frc.robot.subsystems.AlgaeSubsystem;
+import frc.robot.subsystems.WristSubsystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -36,7 +35,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final Blinkin m_exampleSubsystem2 = new Blinkin();
-  private final AlgaeSubsystem m_exampleSubsystem3 = new AlgaeSubsystem();
+  private final WristSubsystem m_exampleSubsystem3 = new WristSubsystem();
 
   // Driver
   GenericHID m_driverController = new GenericHID(0);
@@ -68,8 +67,8 @@ public class RobotContainer {
     new Trigger(m_exampleSubsystem::exampleCondition)
         .onTrue(new ExampleCommand(m_exampleSubsystem));
 
-    new Trigger(() -> m_exampleSubsystem3.getAlgaePresent())
-        .whileTrue(new SetBlinkinColorCmd(m_exampleSubsystem2, LEDConstants.green));
+    // new Trigger(() -> m_exampleSubsystem3.getWristPresent())
+    //     .whileTrue(new SetBlinkinColorCmd(m_exampleSubsystem2, LEDConstants.green));
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
@@ -79,28 +78,20 @@ public class RobotContainer {
 
     // Manual control when Back or Start buttons are pressed
         
-    // m_operCmdController.leftBumper().and(() -> !m_exampleSubsystem3.getAlgaePresent())
+    // m_operCmdController.leftBumper().and(() -> !m_exampleSubsystem3.getWristPresent())
     //     .whileTrue(m_exampleSubsystem3.moveVelocityCommand(true));
     // m_operCmdController.leftTrigger(TriggerThreshold)
     //     .whileTrue(m_exampleSubsystem3.moveVelocityCommand(false));
 
-    m_driverCmdController.button(1)
-        .whileTrue(new WaitUntilCommand(() -> !m_exampleSubsystem3.getAlgaePresent())
-        .andThen(m_exampleSubsystem3.moveVelocityCommand(true)));
-    
-    m_operCmdController.a().and(m_operCmdController.povLeft()) // spit algae front
-        .whileTrue(new WaitUntilCommand(() -> m_exampleSubsystem3.getAlgaePresent())
-        .andThen(m_exampleSubsystem3.moveVelocityCommand(false)));
-
-    m_operCmdController.a().and(m_operCmdController.povDown()) // spit algae rear
-        .whileTrue(new WaitUntilCommand(() -> m_exampleSubsystem3.getAlgaePresent())
-        .andThen(m_exampleSubsystem3.moveVelocityCommand(true)));
-
-    m_operCmdController.a().and(m_operCmdController.povUp()) // shoot algae
-        .whileTrue(new WaitUntilCommand(() -> m_exampleSubsystem3.getAlgaePresent())
-        .andThen(m_exampleSubsystem3.moveVelocityCommand(false)));
-
+        // Manual control wrist when Back or Start buttons are pressed
+    m_operCmdController.back().or(m_operCmdController.start())
+        .and(() -> (m_operController.getRightY() > TriggerThreshold))
+        .whileTrue(m_exampleSubsystem3.moveVelocityCommand(true));
+    m_operCmdController.back().or(m_operCmdController.start())
+        .and(() -> (m_operController.getRightY() < -TriggerThreshold))
+        .whileTrue(m_exampleSubsystem3.moveVelocityCommand(false));
   }
+
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

@@ -24,6 +24,7 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -91,6 +92,8 @@ public class DriveSubsystem extends SubsystemBase {
       );
 
   // ********* stuff for following paths in teleop ***********
+
+  // Alliance m_allianceColor = DriverStation.getAlliance().get();
 
   private  Trajectory m_trajectoryForTeleop;
   private int m_aprilTargetForTeleop = 0;
@@ -366,15 +369,17 @@ public class DriveSubsystem extends SubsystemBase {
         
   // }
 
+  static final double FieldLength = 17.55;  // meters
+  static final double FieldWidth = 8.05;  // meters
   public void setTrajectoryToAprilTarget(int id, HornSelection hornSelect, 
       PhotonVisionSensor photon) {
     //resetOdometryToVision(photon);
     m_aprilTargetForTeleop = id;
     double targetX = 0.0; double targetY = 0.0; double rot = 0.0;
     switch (id) {
-      case 6: targetX = 14.0; targetY = 2.6; rot = Math.toRadians(120); break;
-      case 7: targetX = 14.8; targetY = 4.1; rot = Math.toRadians(180); break;
-      case 11: targetX = 12.2; targetY = 2.5; rot = Math.toRadians(60); break;
+      case 6: targetX = 13.65; targetY = 2.98; rot = Math.toRadians(120); break;
+      case 7: targetX = 14.26; targetY = 4.03; rot = Math.toRadians(180); break;
+      case 11: targetX = 12.45; targetY = 2.99; rot = Math.toRadians(60); break;
     }
     if (hornSelect == HornSelection.R) {
       targetX += Math.sin(rot) * SlideToTheHornDistance;
@@ -382,6 +387,12 @@ public class DriveSubsystem extends SubsystemBase {
     } else if (hornSelect == HornSelection.L) {
       targetX -= Math.sin(rot) * SlideToTheHornDistance;
       targetY += Math.cos(rot) * SlideToTheHornDistance;
+    }
+    if (DriverStation.getAlliance().get() == Alliance.Blue) {
+      // flip to cousin on other side of field
+      targetX = FieldLength - targetX;
+      targetY = FieldWidth - targetY;
+      rot = (rot < 0) ? rot + Math.PI : rot - Math.PI;
     }
     Pose2d currentPose = getPose();
     m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(

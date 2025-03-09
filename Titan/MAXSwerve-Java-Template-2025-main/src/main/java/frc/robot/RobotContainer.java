@@ -26,6 +26,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.SetBlinkinColorCmd;
+import frc.robot.subsystems.AlgaeSubsystem;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.DriveSubsystem.HornSelection;
@@ -66,9 +67,10 @@ public class RobotContainer {
   private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
   private final Blinkin m_blinkin = new Blinkin();
   private final CoralSubsystem m_coral = new CoralSubsystem();
+  private final AlgaeSubsystem m_algae = new AlgaeSubsystem();
 
   // for auto driving
-  Alliance m_allianceColor = DriverStation.getAlliance().get();
+//   Alliance m_allianceColor = DriverStation.getAlliance().get();
   SendableChooser<Command> m_autoChooser = new SendableChooser<>();
   Command m_autoToReef1LToCoralStation, m_autoToReef1RToCoralStation;
   Command m_autoToReef2LToCoralStation, m_autoToReef2RToCoralStation;
@@ -126,13 +128,13 @@ public class RobotContainer {
   }
 
   int[] redReefPositionToAprilTag = {0, 11, 10, 9, 6, 7, 8};
-  int[] blueReefPositionToAprilTag = {0, 20, 21, 22, 19, 18, 17};
+  // int[] blueReefPositionToAprilTag = {0, 20, 21, 22, 19, 18, 17};
   private Command driveToReefPositionCmd (int pos, HornSelection hornSelect) {
-    if (m_allianceColor == Alliance.Red) {
+    // if (m_allianceColor == Alliance.Red) {
         return driveToAprilTagCommand (redReefPositionToAprilTag[pos], hornSelect);
-    } else {
-        return driveToAprilTagCommand (blueReefPositionToAprilTag[pos], hornSelect);
-    }
+    // } else {
+    //     return driveToAprilTagCommand (blueReefPositionToAprilTag[pos], hornSelect);
+    // }
   }
 
   private void buildAutoChooser() {
@@ -155,6 +157,8 @@ public class RobotContainer {
   private void configureNonButtonTriggers() {
     new Trigger(() -> m_coral.getCoralPresent())
         .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.grey));
+    new Trigger(() -> m_algae.getAlgaePresent())
+        .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
   }
 
   private void configureButtonBindings() {
@@ -169,6 +173,8 @@ public class RobotContainer {
         .whileTrue(driveToReefPositionCmd(1, HornSelection.L));
     m_driverCmdController.button(4).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(1, HornSelection.R));
+    m_driverCmdController.povUp().and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
+        .whileTrue(driveToReefPositionCmd(1, HornSelection.Between));
     m_driverCmdController.button(3).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(2, HornSelection.L));
     m_driverCmdController.button(4).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
@@ -192,6 +198,11 @@ public class RobotContainer {
 
     // Coral stations and Processor
 
+    // intake algae
+    m_driverCmdController.button(1)
+        .whileTrue(new WaitUntilCommand(() -> !m_algae.getAlgaePresent())
+        .andThen(m_algae.moveVelocityCommand(true)));
+
     // set X
     m_driverCmdController.povUp().whileTrue(m_robotDrive.setXCommand());
 
@@ -203,6 +214,18 @@ public class RobotContainer {
     m_operCmdController.leftTrigger(TriggerThreshold)
         .whileTrue(m_coral.moveVelocityCommand(false));
 
+    // algae in/out
+    m_operCmdController.a().and(m_operCmdController.povLeft()) // spit algae front
+        .whileTrue(new WaitUntilCommand(() -> m_algae.getAlgaePresent())
+        .andThen(m_algae.moveVelocityCommand(false)));
+
+    m_operCmdController.a().and(m_operCmdController.povDown()) // spit algae rear
+        .whileTrue(new WaitUntilCommand(() -> m_algae.getAlgaePresent())
+        .andThen(m_algae.moveVelocityCommand(true)));
+
+    m_operCmdController.a().and(m_operCmdController.povUp()) // shoot algae
+        .whileTrue(new WaitUntilCommand(() -> m_algae.getAlgaePresent())
+        .andThen(m_algae.moveVelocityCommand(false)));
 
     // Manual control when Back or Start buttons are pressed
     m_operCmdController.back().or(m_operCmdController.start())
@@ -220,7 +243,7 @@ public class RobotContainer {
 
     // reset pose to vision
     m_operCmdController.back().or(m_operCmdController.start())
-        .and(m_operCmdController.rightStick())
+        .and(m_operCmdController.y())
         .onTrue(new InstantCommand (() -> m_robotDrive.debugResetOdometryToVision(m_photon), m_robotDrive, m_photon));
 
 
