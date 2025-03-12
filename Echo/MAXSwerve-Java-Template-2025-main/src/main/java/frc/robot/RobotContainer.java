@@ -17,7 +17,9 @@ import frc.robot.commands.Hold2BarCmd;
 import frc.robot.commands.Move2BarCmd;
 import frc.robot.commands.MoveWristCmd;
 import frc.robot.commands.SetBlinkinColorCmd;
+import frc.robot.commands.SpinAlgaeShtrCmd;
 import frc.robot.subsystems.AlgaeConveyerSS;
+import frc.robot.subsystems.AlgaeShooterSS;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.DriveSubsystem.HornSelection;
@@ -58,6 +60,7 @@ public class RobotContainer {
   private final Blinkin m_blinkin = new Blinkin();
   private final CoralSubsystem m_coral = new CoralSubsystem();
   private final AlgaeConveyerSS m_algaeConv = new AlgaeConveyerSS();
+  private final AlgaeShooterSS m_algaeShoot = new AlgaeShooterSS();
   private final Manipulator2BarSS m_arm = new Manipulator2BarSS();
   private final WristSubsystem m_wrist = new WristSubsystem();
 
@@ -199,7 +202,7 @@ public class RobotContainer {
     // intake algae
     m_driverCmdController.button(1)
         .whileTrue(new WaitUntilCommand(() -> !m_algaeConv.getAlgaePresent())
-        .andThen(m_algaeConv.moveVelocityCommand(true)));
+        .andThen(m_algaeConv.moveVelocityCmd(true)));
 
     // set X
     m_driverCmdController.povDown().or(m_driverCmdController.povDownLeft())
@@ -219,6 +222,7 @@ public class RobotContainer {
     // ******************************** OPERATOR *********************************
 
     // coral in/out
+
     m_operCmdController.rightBumper() // intake
         .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation)
         .andThen(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
@@ -230,27 +234,41 @@ public class RobotContainer {
         .onFalse(m_coral.stopCommand());
 
     // algae in/out
+
+    m_operCmdController.leftBumper().and(() -> !m_algaeConv.getAlgaePresent()) // intake from Reef
+        .whileTrue(m_algaeConv.moveVelocityCmd(true)
+        .alongWith(m_algaeShoot.moveVelocityCmd(true)));
+    m_operCmdController.leftTrigger(TriggerThreshold) // score
+        .onTrue(new SpinAlgaeShtrCmd(m_algaeShoot))
+        .onFalse(m_coral.stopCommand());
+    m_operCmdController.leftTrigger(TriggerThreshold) // score
+        .whileTrue(m_algaeConv.moveVelocityCmd(false)
+        .alongWith(m_algaeShoot.moveVelocityCmd(false)));
+
     m_operCmdController.a().and(m_operCmdController.povLeft()) // spit algae front
         .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
-        .andThen(m_algaeConv.moveVelocityCommand(false)));
+        .andThen(m_algaeConv.moveVelocityCmd(false)));
     m_operCmdController.a().and(m_operCmdController.povDown()) // spit algae rear
         .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
-        .andThen(m_algaeConv.moveVelocityCommand(true)));
+        .andThen(m_algaeConv.moveVelocityCmd(true)));
     m_operCmdController.a().and(m_operCmdController.povUp()) // shoot algae
         .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
-        .andThen(m_algaeConv.moveVelocityCommand(false)));
+        .andThen(m_algaeConv.moveVelocityCmd(false)));
     m_operCmdController.a().and(m_operCmdController.povRight()) // shoot algae
-        .whileTrue(m_algaeConv.moveVelocityCommand(false));
+        .whileTrue(m_algaeConv.moveVelocityCmd(false));
+
+    // example NOT-ing a button:
+    // m_operCmdController.povRight().and(() -> !m_operController.getAButton())
 
         
     // move to Reef Position
 //    m_operCmdController.povDown().whileTrue(m_elevator.moveToReefLevelCmd(1)
-    m_operCmdController.povRight().and(() -> !m_operController.getAButton())
+    m_operCmdController.povRight()
 //    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
-    .onTrue(new Move2BarCmd(m_arm, ArmPosition.T3));
-    m_operCmdController.povLeft().and(() -> !m_operController.getAButton())
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.T3));
+    m_operCmdController.povLeft()
 //    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
-    .onTrue(new Move2BarCmd(m_arm, ArmPosition.T2));
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.T2));
 
     // home position
     m_operCmdController.x().onTrue(new Move2BarCmd(m_arm, ArmPosition.Home));

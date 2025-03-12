@@ -96,7 +96,7 @@ public class AlgaeShooterSS extends SubsystemBase{
     closedLoopController.setReference(VelocityV * (in?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
   }
 
-  public Command moveVelocityCommand(boolean in) {
+  public Command moveVelocityCmd(boolean in) {
     return new RunCommand(() -> moveVelocityControl(in), this);
   }
 
