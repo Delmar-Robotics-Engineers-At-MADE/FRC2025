@@ -12,26 +12,27 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.Hold2BarCmd;
-import frc.robot.commands.HoldElevatorCmd;
 
 public class Manipulator2BarSS extends SubsystemBase{
 
+  public static final class ArmPosition {
+    public static final double MoveOffStart = 220;
+    public static final double StraightUp = 180;
+  }
   static final int CANIDPort = 22;
   static final int CANIDStar = 23;
   static final int DIONumPort = 6;
   static final int DIONumStar = 7;
-  static final int HomeAngle = 0;
+  static final int HomeAngle = 310; // should be 220
   static final double kFF = 1.7;
-  static final double PositionTolerance = 10; // degrees
+  static final double PositionTolerance = 2; // degrees
   static final double VelocityV = 10000;  // degrees per minute
   static final double MRTOORTD = 360 / 27.46; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
@@ -45,6 +46,7 @@ public class Manipulator2BarSS extends SubsystemBase{
 
   // shuffleboard stuff
   private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
+  private ShuffleboardTab debugTab = Shuffleboard.getTab("Arm");
 
   public Manipulator2BarSS() {
     m_magSwitchPort = new DigitalInput(DIONumPort);
@@ -63,9 +65,9 @@ public class Manipulator2BarSS extends SubsystemBase{
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(0.4 /MRTOORTD)
+        .p(0.9 /MRTOORTD) // 0.9
         .i(0)
-        .d(0)
+        .d(0.01)
         .outputRange(-1, 1)
         // Set PID values for velocity control in slot 1
         .p(0.0001/MRTOORTD, ClosedLoopSlot.kSlot1)
@@ -99,6 +101,7 @@ public class Manipulator2BarSS extends SubsystemBase{
     // Dashboard indicators
     matchTab.addBoolean("2Bar Port Homed", () -> getHomedPort());
     matchTab.addBoolean("2Bar Star Homed", () -> getHomedStar());
+    debugTab.addDouble("Angle", () -> getAngle());
 
     setDefaultCommand(new Hold2BarCmd(this));
   
@@ -107,7 +110,9 @@ public class Manipulator2BarSS extends SubsystemBase{
   public void holdCurrentPosition () {
     System.out.println("2 bar holding current position");
     m_holdPosition = m_encoderPort.getPosition();
-    closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
+    double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
+    double feedForward = kFF * Math.sin(currAngle);
+    closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0, feedForward);
   }
 
   public void checkForHomePosition () {
@@ -136,7 +141,9 @@ public class Manipulator2BarSS extends SubsystemBase{
     if (!m_homedPort || !m_homedStar) {  // ok to move manually
       closedLoopController.setReference(VelocityV * (up?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
     } else {
-      closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
+      double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
+      double feedForward = kFF * Math.sin(currAngle);
+      closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0, feedForward);
       System.out.println("************* 2 bar homed, can't move manually **********");
     }
 
@@ -147,14 +154,17 @@ public class Manipulator2BarSS extends SubsystemBase{
     return new RunCommand(() -> moveVelocity(up), this);
   }
 
+  public Command moveToPositionCommand(double angle) {
+    return new RunCommand(() -> moveToPosition(angle), this);
+  }
+
   int ReefLevelAngle[] = {0, 45, 45, 60, 60};
-  public Command moveToReefLevel(int level) {
+  public Command moveToReefLevelCmd(int level) {
     return new RunCommand(() -> moveToPosition(ReefLevelAngle[level]), this);
   }
 
-
-
   public boolean getHomedPort () {return m_homedPort;}
   public boolean getHomedStar () {return m_homedStar;}
+  public double getAngle () {return m_encoderPort.getPosition();}
 
 }

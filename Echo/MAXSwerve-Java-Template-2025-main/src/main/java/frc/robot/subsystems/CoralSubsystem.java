@@ -109,6 +109,7 @@ public class CoralSubsystem extends SubsystemBase{
   }
 
   public Command moveVelocityCommand(boolean in) {
+    System.out.println("coral moving " + in);
     return new RunCommand(() -> moveVelocityControl(in), this);
   }
 

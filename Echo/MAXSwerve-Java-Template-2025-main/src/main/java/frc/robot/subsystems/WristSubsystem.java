@@ -42,6 +42,7 @@ public class WristSubsystem extends SubsystemBase{
 
   // shuffleboard stuff
   private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
+  private ShuffleboardTab debugTab = Shuffleboard.getTab("Wrist");
 
   public WristSubsystem() {
     m_photoEye = new DigitalInput(DIONum);
@@ -94,6 +95,9 @@ public class WristSubsystem extends SubsystemBase{
 
     // Dashboard indicators
     matchTab.addBoolean("Wrist Homed", () -> getHomed());
+    matchTab.addBoolean("Wrist Hot Port", () -> getOvertempPort());
+    matchTab.addBoolean("Wrist Hot Star", () -> getOvertempStar());
+    debugTab.addBoolean("Photo Eye", () -> getPhotoEye());
 
     setDefaultCommand(new HoldWristCmd(this));
   
@@ -102,7 +106,9 @@ public class WristSubsystem extends SubsystemBase{
   public void holdCurrentPosition () {
     m_holdPosition = m_encoderPort.getPosition();
     System.out.println("Wrist holding current position " + m_holdPosition);
-    closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
+    double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
+    double feedForward = kFF * Math.sin(currAngle);
+    closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0, feedForward);
   }
 
   public void checkForHomePosition () {
@@ -136,7 +142,9 @@ public class WristSubsystem extends SubsystemBase{
     if (!m_homed) {  // ok to move manually
       closedLoopController.setReference(VelocityV * (up?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
     } else {
-      closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
+      double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
+      double feedForward = kFF * Math.sin(currAngle);
+      closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0, feedForward);
       System.out.println("************* Wrist homed, can't move manually **********");
     }
 
@@ -160,5 +168,6 @@ public class WristSubsystem extends SubsystemBase{
   public boolean getHomed () {return m_homed;}
   public boolean getOvertempPort () {return m_overtempPort;}
   public boolean getOvertempStar () {return m_overtempStar;}
+  public boolean getPhotoEye () {return m_photoEye.get();}
 
 }

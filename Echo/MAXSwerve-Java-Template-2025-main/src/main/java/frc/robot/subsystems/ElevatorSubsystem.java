@@ -24,15 +24,18 @@ import frc.robot.commands.HoldElevatorCmd;
 
 public class ElevatorSubsystem extends SubsystemBase{
 
+  public static final class ElPosition {
+    public static final double MoveOffStart = 1500;
+  }
   static final int CANIDPort = 20;
   static final int CANIDStar = 21;
   static final int DIONumPort = 4;
   static final int DIONumStar = 5;
   static final int HomeAngle = 0;
-  static final double kFF = 1.3;
-  static final double PositionTolerance = 10; // degrees
-  static final double VelocityV = 10000;  // degrees per minute
-  static final double MRTOORTD = 360 / 5.49; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
+  static final double kFF = 2.2; // constant FF, not multiplied by gravity angle
+  static final double PositionTolerance = 3; // degrees
+  static final double VelocityV = 80000;  // degrees per minute
+  static final double MRTOORTD = 360 / 3; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motorPort, m_motorStar;
   private SparkMaxConfig motorConfig;
@@ -44,6 +47,7 @@ public class ElevatorSubsystem extends SubsystemBase{
 
   // shuffleboard stuff
   private ShuffleboardTab m_matchTab = Shuffleboard.getTab("Match");
+  private ShuffleboardTab debugTab = Shuffleboard.getTab("Elevator");
 
   public ElevatorSubsystem() {
     m_magSwitchPort = new DigitalInput(DIONumPort);
@@ -65,8 +69,8 @@ public class ElevatorSubsystem extends SubsystemBase{
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(1.5 /MRTOORTD)
-        .i(0)
+        .p(1.5 /MRTOORTD) // 1.5
+        .i(0.0001)
         .d(0)
         .outputRange(-1, 1)
         // Set PID values for velocity control in slot 1
@@ -101,6 +105,8 @@ public class ElevatorSubsystem extends SubsystemBase{
     // Dashboard indicators
     m_matchTab.addBoolean("El Port Homed", () -> getHomedPort());
     m_matchTab.addBoolean("El Star Homed", () -> getHomedStar());
+    debugTab.addDouble("Port Angle", () -> getAnglePort());
+    debugTab.addDouble("Star Angle", () -> getAngleStar());
 
     setDefaultCommand(new HoldElevatorCmd(this));
   
@@ -110,11 +116,11 @@ public class ElevatorSubsystem extends SubsystemBase{
     System.out.println("holding current position");
     if (port) {
       m_holdPosPort = m_encoderPort.getPosition();
-      closedLoopPort.setReference(m_holdPosPort, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
+      closedLoopPort.setReference(m_holdPosPort, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0, kFF);
     }
     if (starboard) {
       double m_holdPosStar = m_encoderStar.getPosition();
-      closedLoopStar.setReference(m_holdPosStar, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
+      closedLoopStar.setReference(m_holdPosStar, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0, kFF);
     }
   }
 
@@ -132,6 +138,7 @@ public class ElevatorSubsystem extends SubsystemBase{
 
   public void moveToPosition (double angle) {
     if (m_homedPort && m_homedStar) {
+      System.out.println("Moving to angle " + angle);
       closedLoopPort.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0, kFF);
       closedLoopStar.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0, kFF);
     } else {
@@ -142,10 +149,11 @@ public class ElevatorSubsystem extends SubsystemBase{
   public void moveVelocity (boolean up, boolean port, boolean starboard) {
 
     if (port && starboard) {System.out.println("moving both elevator motors");}
+    else {System.out.println("moving elevator motor(s) " + up);}
 
     if (port) {
       if (!m_homedPort) {  // ok to move manually
-        closedLoopPort.setReference(VelocityV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+        closedLoopPort.setReference(VelocityV * (up ? 1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1, kFF);
       } else {
         System.out.println("************* Port elevator homed, can't move manually **********");
         closedLoopPort.setReference(m_holdPosPort, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
@@ -154,10 +162,10 @@ public class ElevatorSubsystem extends SubsystemBase{
 
     if (starboard) {
       if (!m_homedStar) {  // ok to move manually
-        closedLoopStar.setReference(VelocityV, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+        closedLoopStar.setReference(VelocityV * (up ? 1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1, kFF);
       } else {
         System.out.println("************* Starboard elevator homed, can't move manually **********");
-        closedLoopPort.setReference(m_holdPosStar, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
+        closedLoopPort.setReference(m_holdPosStar, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0, kFF);
       }
     } 
 
@@ -168,12 +176,18 @@ public class ElevatorSubsystem extends SubsystemBase{
     return new RunCommand(() -> moveVelocity(up, port, starboard), this);
   }
 
-  int ReefLevelAngle[] = {0, 45, 45, 60, 60};
-  public Command moveToReefLevel(int level) {
+  public Command moveToPositionCommand(double angle) {
+    return new RunCommand(() -> moveToPosition(angle), this);
+  }
+
+  int ReefLevelAngle[] = {0, 450, 450, 600, 600};
+  public Command moveToReefLevelCmd(int level) {
     return new RunCommand(() -> moveToPosition(ReefLevelAngle[level]), this);
   }
 
   public boolean getHomedPort () {return m_homedPort;}
   public boolean getHomedStar () {return m_homedStar;}
+  public double getAnglePort () {return m_encoderPort.getPosition();}
+  public double getAngleStar () {return m_encoderStar.getPosition();}
 
 }

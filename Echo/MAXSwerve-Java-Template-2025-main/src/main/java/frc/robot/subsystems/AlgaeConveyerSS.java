@@ -24,7 +24,7 @@ import frc.robot.commands.HoldAlgaeCmd;
 
 public class AlgaeConveyerSS extends SubsystemBase{
 
-  static final int CANIDConveyerPort = 27;
+  // static final int CANIDConveyerPort = 27;
   static final int CANIDConveyerStar = 28;
   // static final int CANIDFusion = 1;  fusion line of flight sensor
   static final int DIONumPhotoEye = 1;
@@ -32,7 +32,7 @@ public class AlgaeConveyerSS extends SubsystemBase{
   static final double VelocityV = 10000;  // degrees per minute
   static final double MRTOORTD = 360 / 20; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
-  private SparkMax m_motorPort, m_motorStar;
+  private SparkMax m_motorStar;
   private SparkMaxConfig motorConfig;
   private SparkClosedLoopController closedLoopController;
   private RelativeEncoder m_encoder;
@@ -48,10 +48,10 @@ public class AlgaeConveyerSS extends SubsystemBase{
     // m_tofSensor = new TimeOfFlight(CANIDFusion);
     // m_tofSensor.setRangingMode(RangingMode.Short, 200); // msecs
 
-    m_motorPort = new SparkMax(CANIDConveyerPort, MotorType.kBrushless);
+    // m_motorPort = new SparkMax(CANIDConveyerPort, MotorType.kBrushless);
     m_motorStar = new SparkMax(CANIDConveyerStar, MotorType.kBrushless);
-    closedLoopController = m_motorPort.getClosedLoopController();
-    m_encoder = m_motorPort.getEncoder();
+    closedLoopController = m_motorStar.getClosedLoopController();
+    m_encoder = m_motorStar.getEncoder();
 
     motorConfig = new SparkMaxConfig();
     motorConfig.encoder
@@ -86,11 +86,11 @@ public class AlgaeConveyerSS extends SubsystemBase{
 
     motorConfig.idleMode(IdleMode.kBrake);
 
-    m_motorPort.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    m_motorStar.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // second motor inverted and following first
-    motorConfig.follow(CANIDConveyerPort, true);
-    m_motorStar.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    // motorConfig.follow(CANIDConveyerPort, true);
+    // m_motorStar.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     
     // Dashboard indicators
     matchTab.addBoolean("Algae Present", () -> getAlgaePresent());

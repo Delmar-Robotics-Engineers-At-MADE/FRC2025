@@ -13,11 +13,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 // import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants.OIConstants;
+import frc.robot.commands.Hold2BarCmd;
+import frc.robot.commands.Move2BarCmd;
 import frc.robot.commands.SetBlinkinColorCmd;
 import frc.robot.subsystems.AlgaeConveyerSS;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.DriveSubsystem.HornSelection;
+import frc.robot.subsystems.ElevatorSubsystem.ElPosition;
+import frc.robot.subsystems.Manipulator2BarSS.ArmPosition;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.Manipulator2BarSS;
 import frc.robot.subsystems.PhotonVisionSensor;
@@ -28,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -226,27 +231,30 @@ public class RobotContainer {
         .andThen(m_algaeConv.moveVelocityCommand(false)));
 
     // move to Reef Position
-    m_operCmdController.povDown().whileTrue(m_arm.moveToReefLevel(1));
-    m_operCmdController.povLeft().whileTrue(m_arm.moveToReefLevel(2));
-    m_operCmdController.povRight().whileTrue(m_arm.moveToReefLevel(3));
-    m_operCmdController.povUp().whileTrue(m_arm.moveToReefLevel(4));
+//    m_operCmdController.povDown().whileTrue(m_elevator.moveToReefLevelCmd(1)
+    m_operCmdController.povDown()
+//    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
+    .onTrue(new Move2BarCmd(m_arm, ArmPosition.MoveOffStart)
+    .andThen(new Move2BarCmd(m_arm, ArmPosition.StraightUp))
+    .andThen(new Move2BarCmd(m_arm, ArmPosition.MoveOffStart)));
 
     // Manual control when Back or Start buttons are pressed
-    m_operCmdController.back().or(m_operCmdController.start())
-        .and(m_operCmdController.leftBumper())
+    m_operCmdController.start().and(m_operCmdController.leftBumper())
         .whileTrue(m_elevator.moveVelocityCommand(true, true, false));
-    m_operCmdController.back().or(m_operCmdController.start())
-        .and(m_operCmdController.rightBumper())
+    m_operCmdController.start().and(m_operCmdController.rightBumper())
         .whileTrue(m_elevator.moveVelocityCommand(true, false, true));
-    m_operCmdController.back().or(m_operCmdController.start())
-        .and(m_operCmdController.leftTrigger(TriggerThreshold))
+    m_operCmdController.start().and(m_operCmdController.leftTrigger(TriggerThreshold))
         .whileTrue(m_elevator.moveVelocityCommand(false, true, false));
-    m_operCmdController.back().or(m_operCmdController.start())
-        .and(m_operCmdController.rightTrigger(TriggerThreshold))
+    m_operCmdController.start().and(m_operCmdController.rightTrigger(TriggerThreshold))
         .whileTrue(m_elevator.moveVelocityCommand(false, false, true));
-    m_operCmdController.back().or(m_operCmdController.start())
-        .and(() -> m_operController.getRightY() > TriggerThreshold)
-        .whileTrue(m_elevator.moveVelocityCommand(false, false, true));
+    m_operCmdController.start().and(() -> m_operController.getRightY() > TriggerThreshold)
+        .whileTrue(m_wrist.moveVelocityCommand(true));
+    m_operCmdController.start().and(() -> m_operController.getRightY() < TriggerThreshold)
+        .whileTrue(m_wrist.moveVelocityCommand(false));
+    m_operCmdController.start().and(() -> m_operController.getLeftY() > TriggerThreshold)
+        .whileTrue(m_wrist.moveVelocityCommand(true));
+    m_operCmdController.start().and(() -> m_operController.getLeftY() < TriggerThreshold)
+        .whileTrue(m_wrist.moveVelocityCommand(false));
         
     // reset pose to vision
     m_operCmdController.back().or(m_operCmdController.start())

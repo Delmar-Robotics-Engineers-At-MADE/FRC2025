@@ -28,11 +28,11 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 public class Robot extends TimedRobot {
 
-  static final int Motor1CANID = 20;
-  static final int Motor2CANID = 21;
-  static final double MRTOORTD = 360 / 3; // Motor Rotations To One Output Rotation To Degrees
+  static final int Motor1CANID = 22;
+  static final int Motor2CANID = 23;
+  static final double MRTOORTD = 360 / 27.46; // Motor Rotations To One Output Rotation To Degrees
   static final double HomeAngle = 0;
-  static final double PositionTolerance = 3; // degrees
+  static final double PositionTolerance = 2; // degrees
 
   private SparkMax motor, motor2;
   private SparkMaxConfig motorConfig;
@@ -41,7 +41,7 @@ public class Robot extends TimedRobot {
   private ShuffleboardTab shuffTab = Shuffleboard.getTab("Motor");
   private GenericEntry shuffTargetV = shuffTab.add("Target Velocity (degrees per min)", 0).getEntry();
   private GenericEntry shuffTargetP = shuffTab.add("Target Position (degrees)", 0).getEntry();
-  private GenericEntry shuffKFF = shuffTab.add("kFF", 0).getEntry();
+  private GenericEntry shuffKFF = shuffTab.add("kFF", 1.7).getEntry();
   private GenericEntry shuffVControl = shuffTab
       .add("Velocity Ctrl", false)
       .withWidget(BuiltInWidgets.kToggleButton)
@@ -85,9 +85,9 @@ public class Robot extends TimedRobot {
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(0.4 /MRTOORTD)
+        .p(0 /MRTOORTD)
         .i(0)
-        .d(.11)
+        .d(0)
         .outputRange(-1, 1)
         // Set PID values for velocity control in slot 1
         .p(0.0001/MRTOORTD, ClosedLoopSlot.kSlot1)
