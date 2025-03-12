@@ -22,6 +22,10 @@ import frc.robot.commands.HoldWristCmd;
 
 public class WristSubsystem extends SubsystemBase{
 
+  public static final class WristPosition {
+    public static final double CoralStation = 95;
+  }
+
   static final int CANIDPort = 24;
   static final int CANIDStar = 25;
   static final int DIONum = 3;
@@ -94,12 +98,12 @@ public class WristSubsystem extends SubsystemBase{
     checkForHomePosition();
 
     // Dashboard indicators
-    matchTab.addBoolean("Wrist Homed", () -> getHomed());
-    matchTab.addBoolean("Wrist Hot Port", () -> getOvertempPort());
-    matchTab.addBoolean("Wrist Hot Star", () -> getOvertempStar());
-    debugTab.addBoolean("Photo Eye", () -> getPhotoEye());
+    matchTab.addBoolean("Wrist Homed", () -> getHomed()).withPosition(7, 0);
+    matchTab.addBoolean("Wrist Hot Port", () -> getTempGoodPort()).withPosition(8, 0);
+    matchTab.addBoolean("Wrist Hot Star", () -> getTempGoodStar()).withPosition(9, 0);
+    debugTab.addDouble("Angle", () -> getAngle());
 
-    setDefaultCommand(new HoldWristCmd(this));
+    // setDefaultCommand(new HoldWristCmd(this));
   
   }
 
@@ -113,7 +117,8 @@ public class WristSubsystem extends SubsystemBase{
 
   public void checkForHomePosition () {
     System.out.println("checking home of wrist");
-    if (!m_homed && m_photoEye.get() == false) { // false means pressed
+    // if (!m_homed && m_photoEye.get() == false) { // false means pressed
+    if (!m_homed) {
       m_homed = true;
       m_encoderPort.setPosition(HomeAngle);
     }
@@ -166,8 +171,9 @@ public class WristSubsystem extends SubsystemBase{
   }
 
   public boolean getHomed () {return m_homed;}
-  public boolean getOvertempPort () {return m_overtempPort;}
-  public boolean getOvertempStar () {return m_overtempStar;}
+  public boolean getTempGoodPort () {return !m_overtempPort;}
+  public boolean getTempGoodStar () {return !m_overtempStar;}
   public boolean getPhotoEye () {return m_photoEye.get();}
+  public double getAngle () {return m_encoderPort.getPosition();}
 
 }

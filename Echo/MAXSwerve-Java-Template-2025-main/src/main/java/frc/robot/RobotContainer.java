@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.Hold2BarCmd;
 import frc.robot.commands.Move2BarCmd;
+import frc.robot.commands.MoveWristCmd;
 import frc.robot.commands.SetBlinkinColorCmd;
 import frc.robot.subsystems.AlgaeConveyerSS;
 import frc.robot.subsystems.Blinkin;
@@ -26,6 +27,7 @@ import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.Manipulator2BarSS;
 import frc.robot.subsystems.PhotonVisionSensor;
 import frc.robot.subsystems.WristSubsystem;
+import frc.robot.subsystems.WristSubsystem.WristPosition;
 import frc.robot.subsystems.Blinkin.LEDConstants;
 import frc.robot.subsystems.CoralSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -47,7 +49,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
 
   static final double TriggerThreshold = 0.5;
-  static final double PovSpeed = 0.4;
+  static final double PovSpeed = 0.1;
 
   // The robot's subsystems
   private final PhotonVisionSensor m_photon = new PhotonVisionSensor();
@@ -130,18 +132,23 @@ public class RobotContainer {
   private void buildAutoChooser() {
     m_autoToReef1LToCoralStation = new WaitUntilCommand(() -> m_photon.getPoseEstimateAcquired())
         .andThen(driveToReefPositionCmd(1, HornSelection.L))
-        .andThen(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
+        //.andThen(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
+        .andThen(new Move2BarCmd(m_arm, ArmPosition.T3))
+        .andThen(m_coral.moveVelocityOnceCmd(false))
+        .andThen(new WaitCommand(4))
+        .andThen(m_coral.stopCommand())
+        .andThen(new Move2BarCmd(m_arm, ArmPosition.Home));
     m_autoToReef1RToCoralStation = driveToReefPositionCmd(1, HornSelection.R);
     m_autoToReef2LToCoralStation = driveToReefPositionCmd(2, HornSelection.L);
     m_autoToReef2RToCoralStation = driveToReefPositionCmd(2, HornSelection.R);
     m_autoToReef4LToCoralStation = driveToReefPositionCmd(4, HornSelection.L);
     m_autoToReef4RToCoralStation = driveToReefPositionCmd(4, HornSelection.R);
     m_autoChooser.setDefaultOption("To Reef 1L", m_autoToReef1LToCoralStation);
-    m_autoChooser.addOption("To Reef 1R", m_autoToReef1RToCoralStation);
-    m_autoChooser.addOption("To Reef 2L", m_autoToReef2LToCoralStation);
-    m_autoChooser.addOption("To Reef 2R", m_autoToReef2RToCoralStation);
-    m_autoChooser.addOption("To Reef 4L", m_autoToReef4LToCoralStation);
-    m_autoChooser.addOption("To Reef 4R", m_autoToReef4RToCoralStation);
+    // m_autoChooser.addOption("To Reef 1R", m_autoToReef1RToCoralStation);
+    // m_autoChooser.addOption("To Reef 2L", m_autoToReef2LToCoralStation);
+    // m_autoChooser.addOption("To Reef 2R", m_autoToReef2RToCoralStation);
+    // m_autoChooser.addOption("To Reef 4L", m_autoToReef4LToCoralStation);
+    // m_autoChooser.addOption("To Reef 4R", m_autoToReef4RToCoralStation);
   }
 
   private void configureNonButtonTriggers() {
@@ -178,7 +185,7 @@ public class RobotContainer {
         .whileTrue(driveToReefPositionCmd(4, HornSelection.L));
     m_driverCmdController.button(4).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(4, HornSelection.R));
-        m_driverCmdController.button(3).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(3).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(5, HornSelection.L));
     m_driverCmdController.button(4).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(5, HornSelection.R));
@@ -200,43 +207,53 @@ public class RobotContainer {
         .whileTrue(m_robotDrive.setXCommand());
 
     // drive robot relative in cardinal directions
-    m_buttonPadCmd.povLeft().whileTrue(new RunCommand(
-        () -> m_robotDrive.drive(PovSpeed, 0, 0, false),m_robotDrive));
-    m_buttonPadCmd.povRight().whileTrue(new RunCommand(
-        () -> m_robotDrive.drive(-PovSpeed, 0, 0, false),m_robotDrive));
     m_buttonPadCmd.povUp().whileTrue(new RunCommand(
-        () -> m_robotDrive.drive(0, PovSpeed, 0, false),m_robotDrive));
+        () -> m_robotDrive.drive(PovSpeed, 0, 0, false),m_robotDrive));
     m_buttonPadCmd.povDown().whileTrue(new RunCommand(
+        () -> m_robotDrive.drive(-PovSpeed, 0, 0, false),m_robotDrive));
+    m_buttonPadCmd.povLeft().whileTrue(new RunCommand(
+        () -> m_robotDrive.drive(0, PovSpeed, 0, false),m_robotDrive));
+    m_buttonPadCmd.povRight().whileTrue(new RunCommand(
         () -> m_robotDrive.drive(0, -PovSpeed, 0, false),m_robotDrive));
                     
     // ******************************** OPERATOR *********************************
 
     // coral in/out
+    m_operCmdController.rightBumper() // intake
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation)
+        .andThen(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
     m_operCmdController.rightBumper().and(() -> !m_coral.getCoralPresent())
-        .whileTrue(m_coral.moveVelocityCommand(true));
-    m_operCmdController.rightTrigger(TriggerThreshold)
-        .whileTrue(m_coral.moveVelocityCommand(false));
+        .whileTrue(m_coral.moveVelocityCmd(true))
+        .onFalse(m_coral.stopCommand());
+    m_operCmdController.rightTrigger(TriggerThreshold) // score
+        .whileTrue(m_coral.moveVelocityCmd(false))
+        .onFalse(m_coral.stopCommand());
 
     // algae in/out
     m_operCmdController.a().and(m_operCmdController.povLeft()) // spit algae front
         .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
         .andThen(m_algaeConv.moveVelocityCommand(false)));
-
     m_operCmdController.a().and(m_operCmdController.povDown()) // spit algae rear
         .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
         .andThen(m_algaeConv.moveVelocityCommand(true)));
-
     m_operCmdController.a().and(m_operCmdController.povUp()) // shoot algae
         .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
         .andThen(m_algaeConv.moveVelocityCommand(false)));
+    m_operCmdController.a().and(m_operCmdController.povRight()) // shoot algae
+        .whileTrue(m_algaeConv.moveVelocityCommand(false));
 
+        
     // move to Reef Position
 //    m_operCmdController.povDown().whileTrue(m_elevator.moveToReefLevelCmd(1)
-    m_operCmdController.povDown()
+    m_operCmdController.povRight().and(() -> !m_operController.getAButton())
 //    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
-    .onTrue(new Move2BarCmd(m_arm, ArmPosition.MoveOffStart)
-    .andThen(new Move2BarCmd(m_arm, ArmPosition.StraightUp))
-    .andThen(new Move2BarCmd(m_arm, ArmPosition.MoveOffStart)));
+    .onTrue(new Move2BarCmd(m_arm, ArmPosition.T3));
+    m_operCmdController.povLeft().and(() -> !m_operController.getAButton())
+//    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
+    .onTrue(new Move2BarCmd(m_arm, ArmPosition.T2));
+
+    // home position
+    m_operCmdController.x().onTrue(new Move2BarCmd(m_arm, ArmPosition.Home));
 
     // Manual control when Back or Start buttons are pressed
     m_operCmdController.start().and(m_operCmdController.leftBumper())
@@ -317,8 +334,10 @@ public class RobotContainer {
   private void setupDashboard() {
     ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
     matchTab.addCamera("Limelight", "Limelight", "http://10.80.77.18:5800");
+//         .withPosition(0, 1).withSize(4, 3);
     buildAutoChooser();
-    matchTab.add(m_autoChooser);
+    matchTab.add(m_autoChooser).withPosition(0, 0);
+
   }
 
   public void checkHomePositions() {

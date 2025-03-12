@@ -32,7 +32,7 @@ public class CoralSubsystem extends SubsystemBase{
   // static final int CANIDFusion = 1; // fusion line of flight sensor
   static final int DIONumPhotoEye = 2;
   static final double PositionTolerance = 10; // degrees
-  static final double VelocityV = 10000;  // degrees per minute
+  static final double VelocityV = 50000;  // degrees per minute
   static final double MRTOORTD = 360 / 20; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motor;
@@ -46,6 +46,7 @@ public class CoralSubsystem extends SubsystemBase{
 
   // shuffleboard stuff
   private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
+  private ShuffleboardTab debugTab = Shuffleboard.getTab("Coral");
 
   public CoralSubsystem() {
     m_photoEye = new DigitalInput(DIONumPhotoEye);
@@ -83,8 +84,8 @@ public class CoralSubsystem extends SubsystemBase{
         .maxAcceleration(1000*MRTOORTD)
         .allowedClosedLoopError(PositionTolerance) // in degrees
         // Set MAXMotion parameters for velocity control in slot 1
-        .maxAcceleration(500*MRTOORTD, ClosedLoopSlot.kSlot1)
-        .maxVelocity(6000*MRTOORTD, ClosedLoopSlot.kSlot1)
+        .maxAcceleration(1000*MRTOORTD, ClosedLoopSlot.kSlot1)
+        .maxVelocity(60000*MRTOORTD, ClosedLoopSlot.kSlot1)
         .allowedClosedLoopError(MRTOORTD, ClosedLoopSlot.kSlot1); // degrees per sec
 
     motorConfig.idleMode(IdleMode.kBrake);
@@ -92,27 +93,40 @@ public class CoralSubsystem extends SubsystemBase{
     m_motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // Dashboard indicators
-    matchTab.addBoolean("Coral Present", () -> getCoralPresent());
+    matchTab.addBoolean("Coral Present", () -> getCoralPresent())
+        .withPosition(1, 4);
+    debugTab.addDouble("Position", () -> getAngle());
 
     setDefaultCommand(new HoldCoralCmd(this));
   
   }
 
   public void holdCurrentPosition () {
-    System.out.println("coral holding current position");
     m_holdPosition = m_encoder.getPosition();
+    System.out.println("coral holding current position: " + m_holdPosition);
     closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
   }
 
   public void moveVelocityControl (boolean in) {
-    closedLoopController.setReference(VelocityV * (in?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+    closedLoopController.setReference(VelocityV * (in?-1:1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+  }
+  public void stop () {
+    closedLoopController.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
   }
 
-  public Command moveVelocityCommand(boolean in) {
+  public Command moveVelocityOnceCmd(boolean in) {
+    System.out.println("coral moving " + in);
+    return new InstantCommand(() -> moveVelocityControl(in), this);
+  }
+  public Command moveVelocityCmd(boolean in) {
     System.out.println("coral moving " + in);
     return new RunCommand(() -> moveVelocityControl(in), this);
   }
+  public Command stopCommand() {
+    return new InstantCommand(() -> stop(), this);
+  }
 
   public boolean getCoralPresent () {return m_photoEye.get() == false;}
+  public double getAngle () {return m_encoder.getPosition();}
 
 }

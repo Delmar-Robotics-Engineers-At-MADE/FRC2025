@@ -103,8 +103,8 @@ public class ElevatorSubsystem extends SubsystemBase{
     checkForHomePosition();
 
     // Dashboard indicators
-    m_matchTab.addBoolean("El Port Homed", () -> getHomedPort());
-    m_matchTab.addBoolean("El Star Homed", () -> getHomedStar());
+    m_matchTab.addBoolean("El Port Homed", () -> getHomedPort()).withPosition(2, 0);
+    m_matchTab.addBoolean("El Star Homed", () -> getHomedStar()).withPosition(3, 0);
     debugTab.addDouble("Port Angle", () -> getAnglePort());
     debugTab.addDouble("Star Angle", () -> getAngleStar());
 
@@ -126,11 +126,11 @@ public class ElevatorSubsystem extends SubsystemBase{
 
   public void checkForHomePosition () {
     System.out.println("checking home of elevator");
-    if (!m_homedPort && m_magSwitchPort.get() == false) { // false means pressed
+    if (!m_homedPort /* && m_magSwitchPort.get() == false */) { // false means pressed
       m_homedPort = true;
       m_encoderPort.setPosition(HomeAngle);
     }
-    if (!m_homedStar && m_magSwitchStar.get() == false) { // false means pressed
+    if (!m_homedStar /* && m_magSwitchStar.get() == false */) { // false means pressed
       m_homedStar = true;
       m_encoderStar.setPosition(HomeAngle);
     }

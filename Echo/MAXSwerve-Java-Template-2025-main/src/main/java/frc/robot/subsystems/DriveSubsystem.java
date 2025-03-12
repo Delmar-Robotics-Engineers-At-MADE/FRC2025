@@ -48,7 +48,7 @@ import com.kauailabs.navx.frc.AHRS;
 public class DriveSubsystem extends SubsystemBase {
 
   // Constants
-  static final double SlideToTheHornDistance = 0.2; // meters to slide left or right
+  static final double SlideToTheHornDistance = 0.12; // meters to slide left or right
 
   // Create MAXSwerveModules
   private final MAXSwerveModule m_frontLeft = new MAXSwerveModule(

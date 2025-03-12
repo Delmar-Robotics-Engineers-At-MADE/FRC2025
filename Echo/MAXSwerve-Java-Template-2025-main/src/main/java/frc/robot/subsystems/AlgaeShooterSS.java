@@ -87,7 +87,8 @@ public class AlgaeShooterSS extends SubsystemBase{
     m_motorStar.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     
     // Dashboard indicators
-    matchTab.addBoolean("Shooter Ready", () -> getVelocityReady());
+    matchTab.addBoolean("Shooter Ready", () -> getVelocityReady())
+        .withPosition(1, 6);
 
   }
 

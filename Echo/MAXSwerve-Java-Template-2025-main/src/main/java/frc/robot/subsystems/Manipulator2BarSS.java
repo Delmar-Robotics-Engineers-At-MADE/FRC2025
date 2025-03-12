@@ -23,8 +23,11 @@ import frc.robot.commands.Hold2BarCmd;
 public class Manipulator2BarSS extends SubsystemBase{
 
   public static final class ArmPosition {
-    public static final double MoveOffStart = 220;
+    public static final double CoralStation = 265;
+    public static final double Home = 220;
     public static final double StraightUp = 180;
+    public static final double T3 = 140;
+    public static final double T2 = 100;
   }
   static final int CANIDPort = 22;
   static final int CANIDStar = 23;
@@ -79,7 +82,7 @@ public class Manipulator2BarSS extends SubsystemBase{
     motorConfig.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass
         // a closed loop slot, as it will default to slot 0.
-        .maxVelocity(1000*MRTOORTD)
+        .maxVelocity(600*MRTOORTD)
         .maxAcceleration(1000*MRTOORTD)
         .allowedClosedLoopError(PositionTolerance) // in degrees
         // Set MAXMotion parameters for velocity control in slot 1
@@ -99,8 +102,8 @@ public class Manipulator2BarSS extends SubsystemBase{
     checkForHomePosition();
 
     // Dashboard indicators
-    matchTab.addBoolean("2Bar Port Homed", () -> getHomedPort());
-    matchTab.addBoolean("2Bar Star Homed", () -> getHomedStar());
+    matchTab.addBoolean("2Bar Port Homed", () -> getHomedPort()).withPosition(4, 0);
+    matchTab.addBoolean("2Bar Star Homed", () -> getHomedStar()).withPosition(5, 0);
     debugTab.addDouble("Angle", () -> getAngle());
 
     setDefaultCommand(new Hold2BarCmd(this));
@@ -116,11 +119,11 @@ public class Manipulator2BarSS extends SubsystemBase{
   }
 
   public void checkForHomePosition () {
-    if (!m_homedPort && m_magSwitchPort.get() == false) { // false means pressed
+    if (!m_homedPort /* && m_magSwitchPort.get() == false */) { // false means pressed
       m_homedPort = true;
       m_encoderPort.setPosition(HomeAngle);
     }
-    if (!m_homedStar && m_magSwitchStar.get() == false) { // false means pressed
+    if (!m_homedStar /* && m_magSwitchStar.get() == false*/) { // false means pressed
       m_homedStar = true;
       // we don't use the starboard encoder because starboard is following port
     }

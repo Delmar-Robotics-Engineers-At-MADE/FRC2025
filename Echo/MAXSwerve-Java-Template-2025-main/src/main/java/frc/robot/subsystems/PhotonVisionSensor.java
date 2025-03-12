@@ -38,9 +38,9 @@ public final class PhotonVisionSensor extends SubsystemBase {
 
   /// @todo Fill this in with the correct measurements later
   // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-  static Transform3d robotToCamFront = new Transform3d(new Translation3d(0.35, -.35, 0.9), 
+  static Transform3d robotToCamFront = new Transform3d(new Translation3d(0.15, -.35, 0.2), 
       new Rotation3d(0,0,0));
-  static Transform3d robotToCamBack = new Transform3d(new Translation3d(0.35, .35, 0.9), 
+  static Transform3d robotToCamBack = new Transform3d(new Translation3d(-0.15, .35, 0.2), 
       new Rotation3d(0,0,Math.PI));
 
   static AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);    
@@ -61,7 +61,8 @@ public final class PhotonVisionSensor extends SubsystemBase {
     tab.addDouble("Pose X", () -> getPoseX());
     tab.addDouble("Pose Y", () -> getPoseY());
     tab.addString("Rotation", () -> getPoseRot());
-    m_matchTab.addBoolean("Vision Fix", () -> getPoseEstimateAcquired());
+    m_matchTab.addBoolean("Vision Fix", () -> getPoseEstimateAcquired())
+        .withPosition(6, 0);
   }  
 
   // public void getBestTargetLocation() {

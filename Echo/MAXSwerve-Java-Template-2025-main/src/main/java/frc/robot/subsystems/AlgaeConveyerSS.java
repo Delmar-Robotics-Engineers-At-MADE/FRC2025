@@ -29,7 +29,7 @@ public class AlgaeConveyerSS extends SubsystemBase{
   // static final int CANIDFusion = 1;  fusion line of flight sensor
   static final int DIONumPhotoEye = 1;
   static final double PositionTolerance = 10; // degrees
-  static final double VelocityV = 10000;  // degrees per minute
+  static final double VelocityV = 50000;  // degrees per minute
   static final double MRTOORTD = 360 / 20; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motorStar;
@@ -80,8 +80,8 @@ public class AlgaeConveyerSS extends SubsystemBase{
         .maxAcceleration(1000*MRTOORTD)
         .allowedClosedLoopError(PositionTolerance) // in degrees
         // Set MAXMotion parameters for velocity control in slot 1
-        .maxAcceleration(500*MRTOORTD, ClosedLoopSlot.kSlot1)
-        .maxVelocity(6000*MRTOORTD, ClosedLoopSlot.kSlot1)
+        .maxAcceleration(50000*MRTOORTD, ClosedLoopSlot.kSlot1)
+        .maxVelocity(60000*MRTOORTD, ClosedLoopSlot.kSlot1)
         .allowedClosedLoopError(MRTOORTD, ClosedLoopSlot.kSlot1); // degrees per sec
 
     motorConfig.idleMode(IdleMode.kBrake);
@@ -93,7 +93,8 @@ public class AlgaeConveyerSS extends SubsystemBase{
     // m_motorStar.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     
     // Dashboard indicators
-    matchTab.addBoolean("Algae Present", () -> getAlgaePresent());
+    matchTab.addBoolean("Algae Present", () -> getAlgaePresent())
+        .withPosition(0, 4);
 
     setDefaultCommand(new HoldAlgaeCmd(this));
   
