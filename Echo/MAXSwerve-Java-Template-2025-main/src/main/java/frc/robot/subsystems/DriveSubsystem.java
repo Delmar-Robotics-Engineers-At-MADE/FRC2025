@@ -377,8 +377,16 @@ public class DriveSubsystem extends SubsystemBase {
     m_aprilTargetForTeleop = id;
     double targetX = 0.0; double targetY = 0.0; double rot = 0.0;
     switch (id) {
-      case 6: targetX = 13.65; targetY = 2.98; rot = Math.toRadians(120); break;
+      case 1: targetX = 16.47987442; targetY = 0.962976864; rot = Math.toRadians(-54); break;
+      case 2: targetX = 16.47987442; targetY = 7.097023136; rot = Math.toRadians(54); break;
+      case 3: targetX = 11.56; targetY = 7.6855; rot = Math.toRadians(90); break;
+      case 4: targetX = 9.6545; targetY = 6.14; rot = Math.toRadians(-180); break;
+      case 5: targetX = 9.6545; targetY = 1.91; rot = Math.toRadians(-180); break;
+      case 6: targetX = 13.65725; targetY = 2.98; rot = Math.toRadians(120); break;
       case 7: targetX = 14.26; targetY = 4.03; rot = Math.toRadians(180); break;
+      case 8: targetX = 13.65725; targetY = 5.074326514; rot = Math.toRadians(-120); break;
+      case 9: targetX = 12.45275; targetY = 5.074326514; rot = Math.toRadians(-60); break;
+      case 10: targetX = 11.8555; targetY = 4.03; rot = Math.toRadians(0); break;
       case 11: targetX = 12.45; targetY = 2.99; rot = Math.toRadians(60); break;
     }
     if (hornSelect == HornSelection.R) {
@@ -402,6 +410,16 @@ public class DriveSubsystem extends SubsystemBase {
         m_trajectoryConfigForTeleop);
         
   }
+
+  public void setTrajectoryToRotateDownfield(PhotonVisionSensor photon) {
+    Pose2d currentPose = getPose();
+    m_trajectoryForTeleop = TrajectoryGenerator.generateTrajectory(
+        currentPose,
+        List.of(),
+        new Pose2d(currentPose.getX(), currentPose.getY(), new Rotation2d(0)),
+        m_trajectoryConfigForTeleop);
+        
+  }
   
   // public Command setTrajectoryToProcessorCmd(PhotonVisionSensor photon) {
   //   return new InstantCommand(() -> setTrajectoryToProcessor(photon));
@@ -409,6 +427,9 @@ public class DriveSubsystem extends SubsystemBase {
   public Command setTrajectoryToAprilTargetCmd(int id, HornSelection hornSelect,
       PhotonVisionSensor photon) {
     return new InstantCommand(() -> setTrajectoryToAprilTarget(id, hornSelect, photon));
+  }
+  public Command setTrajectoryToRotateDownfieldCmd(PhotonVisionSensor photon) {
+    return new InstantCommand(() -> setTrajectoryToRotateDownfield(photon));
   }
 
   public Command getSwerveControllerCmdForTeleop(PhotonVisionSensor photon) {
