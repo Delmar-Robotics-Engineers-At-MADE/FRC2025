@@ -24,6 +24,7 @@ public class WristSubsystem extends SubsystemBase{
 
   public static final class WristPosition {
     public static final double CoralStation = -40;
+    public static final double Home = 0;
   }
 
   static final int CANIDPort = 24;
@@ -69,7 +70,7 @@ public class WristSubsystem extends SubsystemBase{
         .d(0.11)
         .outputRange(-1, 1)
         // Set PID values for velocity control in slot 1
-        .p(0.0001/MRTOORTD, ClosedLoopSlot.kSlot1)
+        .p(0.00001/MRTOORTD, ClosedLoopSlot.kSlot1)
         .i(0, ClosedLoopSlot.kSlot1)
         .d(0, ClosedLoopSlot.kSlot1)
         .velocityFF(1.0 / (5767*MRTOORTD), ClosedLoopSlot.kSlot1)
@@ -129,13 +130,13 @@ public class WristSubsystem extends SubsystemBase{
   static final double MaxTemp = 100; // celsius
   public void moveToPosition (double angle) {
     if (m_homed) {
-      m_overtempPort = m_motorPort.getMotorTemperature() < MaxTemp;
-      m_overtempStar = m_motorStar.getMotorTemperature() < MaxTemp;
-      // if (m_overtempPort || m_overtempStar) {
-      //   // motor(s) too hot, move to home position instead
-      //   angle = 0;
-      //   System.out.println("************* Wrist motors too hot; homing **********");
-      // }
+      m_overtempPort = m_motorPort.getMotorTemperature() > MaxTemp;
+      m_overtempStar = m_motorStar.getMotorTemperature() > MaxTemp;
+      if (m_overtempPort || m_overtempStar) {
+        // motor(s) too hot, move to home position instead
+        angle = 0;
+        System.out.println("************* Wrist motors too hot; homing **********");
+      }
       double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
       double feedForward = kFF * Math.sin(currAngle);
       System.out.println("moving wrist");

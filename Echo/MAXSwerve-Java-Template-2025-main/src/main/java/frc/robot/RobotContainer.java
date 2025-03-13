@@ -272,13 +272,15 @@ public class RobotContainer {
 
     // coral in/out
 
-    m_operCmdController.rightBumper() // intake
-        .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation)
-        .alongWith(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
+    // m_operCmdController.rightBumper() // intake
+    //     .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation)
+    //     .alongWith(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
     m_operCmdController.rightBumper().and(() -> !m_coral.getCoralPresent())
-        .whileTrue(m_coral.moveVelocityCmd(true))
-        .onFalse(m_coral.stopCommand());
+        .whileTrue(m_coral.moveVelocityCmd(true));
+ //       .onFalse(m_coral.stopCommand());
     m_operCmdController.rightTrigger(TriggerThreshold) // score
+        .onTrue(new MoveWristCmd(m_wrist, WristPosition.Home));
+    m_operCmdController.rightTrigger(TriggerThreshold) 
         .whileTrue(m_coral.moveVelocityCmd(false))
         .onFalse(m_coral.stopCommand());
 
@@ -318,22 +320,22 @@ public class RobotContainer {
     m_operCmdController.x().onTrue(new Move2BarCmd(m_arm, ArmPosition.Home));
 
     // Manual control when Back or Start buttons are pressed
-    m_operCmdController.start().and(m_operCmdController.leftBumper())
-        .whileTrue(m_elevator.moveVelocityCommand(true, true, false));
-    m_operCmdController.start().and(m_operCmdController.rightBumper())
-        .whileTrue(m_elevator.moveVelocityCommand(true, false, true));
-    m_operCmdController.start().and(m_operCmdController.leftTrigger(TriggerThreshold))
-        .whileTrue(m_elevator.moveVelocityCommand(false, true, false));
-    m_operCmdController.start().and(m_operCmdController.rightTrigger(TriggerThreshold))
-        .whileTrue(m_elevator.moveVelocityCommand(false, false, true));
-    m_operCmdController.start().and(() -> m_operController.getRightY() > TriggerThreshold)
-        .whileTrue(m_wrist.moveVelocityCommand(true));
-    m_operCmdController.start().and(() -> m_operController.getRightY() < TriggerThreshold)
-        .whileTrue(m_wrist.moveVelocityCommand(false));
-    m_operCmdController.start().and(() -> m_operController.getLeftY() > TriggerThreshold)
-        .whileTrue(m_wrist.moveVelocityCommand(true));
-    m_operCmdController.start().and(() -> m_operController.getLeftY() < TriggerThreshold)
-        .whileTrue(m_wrist.moveVelocityCommand(false));
+    // m_operCmdController.start().and(m_operCmdController.leftBumper())
+    //     .whileTrue(m_elevator.moveVelocityCommand(true, true, false));
+    // m_operCmdController.start().and(m_operCmdController.rightBumper())
+    //     .whileTrue(m_elevator.moveVelocityCommand(true, false, true));
+    // m_operCmdController.start().and(m_operCmdController.leftTrigger(TriggerThreshold))
+    //     .whileTrue(m_elevator.moveVelocityCommand(false, true, false));
+    // m_operCmdController.start().and(m_operCmdController.rightTrigger(TriggerThreshold))
+    //     .whileTrue(m_elevator.moveVelocityCommand(false, false, true));
+    // m_operCmdController.start().and(() -> m_operController.getRightY() > TriggerThreshold)
+    //     .whileTrue(m_wrist.moveVelocityCommand(true));
+    // m_operCmdController.start().and(() -> m_operController.getRightY() < TriggerThreshold)
+    //     .whileTrue(m_wrist.moveVelocityCommand(false));
+    // m_operCmdController.start().and(() -> m_operController.getLeftY() > TriggerThreshold)
+    //     .whileTrue(m_wrist.moveVelocityCommand(true));
+    // m_operCmdController.start().and(() -> m_operController.getLeftY() < TriggerThreshold)
+    //     .whileTrue(m_wrist.moveVelocityCommand(false));
         
     // reset pose to vision
     m_operCmdController.back().or(m_operCmdController.start())
