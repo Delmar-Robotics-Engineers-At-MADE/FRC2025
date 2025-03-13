@@ -52,6 +52,7 @@ public class RobotContainer {
 
   static final double TriggerThreshold = 0.5;
   static final double PovSpeed = 0.1;
+  static final double DriveSpeedDivider = 2;
 
   // The robot's subsystems
   private final PhotonVisionSensor m_photon = new PhotonVisionSensor();
@@ -70,6 +71,7 @@ public class RobotContainer {
   Command m_autoToReef1LToCoralStation, m_autoToReef1RToCoralStation;
   Command m_autoToReef2LToCoralStation, m_autoToReef2RToCoralStation;
   Command m_autoToReef4LToCoralStation, m_autoToReef4RToCoralStation;
+  Command m_autoExitStartingZone;
 
   // Driver
   GenericHID m_driverController = new GenericHID(OIConstants.kDriverControllerPort);
@@ -105,9 +107,9 @@ public class RobotContainer {
         // Turning is controlled by the X axis of the right stick.
         new RunCommand(
             () -> m_robotDrive.drive(
-                MathUtil.applyDeadband(-m_driverController.getRawAxis(1)/4, OIConstants.kDriveDeadband), // getLeftY()
-                MathUtil.applyDeadband(-m_driverController.getRawAxis(0)/4, OIConstants.kDriveDeadband), // getLeftX()
-                -MathUtil.applyDeadband(m_driverController.getRawAxis(2)/4, OIConstants.kDriveDeadband*2), // getRightX()
+                MathUtil.applyDeadband(-m_driverController.getRawAxis(1)/DriveSpeedDivider, OIConstants.kDriveDeadband), // getLeftY()
+                MathUtil.applyDeadband(-m_driverController.getRawAxis(0)/DriveSpeedDivider, OIConstants.kDriveDeadband), // getLeftX()
+                -MathUtil.applyDeadband(m_driverController.getRawAxis(2)/DriveSpeedDivider, OIConstants.kDriveDeadband*2), // getRightX()
                 true),
             m_robotDrive));
 
@@ -158,7 +160,17 @@ public class RobotContainer {
     // m_autoChooser.addOption("To Reef 2R", m_autoToReef2RToCoralStation);
     // m_autoChooser.addOption("To Reef 4L", m_autoToReef4LToCoralStation);
     // m_autoChooser.addOption("To Reef 4R", m_autoToReef4RToCoralStation);
+
+    // exit staring zone, driving backward toward alliance station
+    m_autoExitStartingZone = new InstantCommand(() -> m_robotDrive.drive(-PovSpeed, 0, 0, false),m_robotDrive)
+        .andThen(new WaitCommand(1))
+        .andThen(new InstantCommand(() -> m_robotDrive.drive(0, 0, 0, false),m_robotDrive))
+        .andThen(() -> m_robotDrive.zeroHeading());
+    m_autoChooser.addOption("Exit Start Zone", m_autoExitStartingZone);
   }
+
+    
+
 
   private void configureNonButtonTriggers() {
     new Trigger(() -> m_coral.getCoralPresent())
