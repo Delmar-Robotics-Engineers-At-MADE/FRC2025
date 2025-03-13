@@ -32,7 +32,8 @@ public class CoralSubsystem extends SubsystemBase{
   // static final int CANIDFusion = 1; // fusion line of flight sensor
   static final int DIONumPhotoEye = 2;
   static final double PositionTolerance = 10; // degrees
-  static final double VelocityV = 30000;  // degrees per minute
+  static final double VelocityV = 25000;  // degrees per minute
+  static final double OpenLoopSpeed = 0.3;
   static final double MRTOORTD = 360 / 20; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motor;
@@ -71,7 +72,7 @@ public class CoralSubsystem extends SubsystemBase{
         .d(0)
         .outputRange(-1, 1)
         // Set PID values for velocity control in slot 1
-        .p(0.01/MRTOORTD, ClosedLoopSlot.kSlot1)
+        .p(0.001/MRTOORTD, ClosedLoopSlot.kSlot1)
         .i(0, ClosedLoopSlot.kSlot1)
         .d(0, ClosedLoopSlot.kSlot1)
         .velocityFF(1.0 / (5767*MRTOORTD), ClosedLoopSlot.kSlot1)
@@ -108,10 +109,12 @@ public class CoralSubsystem extends SubsystemBase{
   }
 
   public void moveVelocityControl (boolean in) {
-    closedLoopController.setReference(VelocityV * (in?-1:1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+    //closedLoopController.setReference(VelocityV * (in?-1:1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+    m_motor.set(OpenLoopSpeed * (in?-1:1));
   }
   public void stop () {
-    closedLoopController.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+    // closedLoopController.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+    m_motor.set(0);
   }
 
   public Command moveVelocityOnceCmd(boolean in) {

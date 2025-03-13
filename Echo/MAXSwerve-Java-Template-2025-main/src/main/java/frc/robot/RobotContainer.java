@@ -272,12 +272,12 @@ public class RobotContainer {
 
     // coral in/out
 
-    // m_operCmdController.rightBumper() // intake
-    //     .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation)
-    //     .alongWith(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
+    m_operCmdController.rightBumper() // intake
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation)
+        .alongWith(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
     m_operCmdController.rightBumper().and(() -> !m_coral.getCoralPresent())
-        .whileTrue(m_coral.moveVelocityCmd(true));
- //       .onFalse(m_coral.stopCommand());
+        .whileTrue(m_coral.moveVelocityCmd(true))
+        .onFalse(m_coral.stopCommand());
     m_operCmdController.rightTrigger(TriggerThreshold) // score
         .onTrue(new MoveWristCmd(m_wrist, WristPosition.Home));
     m_operCmdController.rightTrigger(TriggerThreshold) 
