@@ -293,13 +293,14 @@ public class RobotContainer {
         .alongWith(m_algaeShoot.moveVelocityCmd(true)));
     m_operCmdController.leftTrigger(TriggerThreshold) // shoot
         .onTrue(new SpinAlgaeShtrCmd(m_algaeShoot))
-        .onFalse(m_coral.stopCommand());
+        .onFalse(m_algaeConv.stopCommand());
     m_operCmdController.leftTrigger(TriggerThreshold) // shoot
         .whileTrue(m_algaeConv.moveVelocityCmd(false)
         .alongWith(m_algaeShoot.moveVelocityCmd(false)));
 
     m_operCmdController.y() // spit algae front
-        .whileTrue(m_algaeConv.moveVelocityCmd(false));
+        .whileTrue(m_algaeConv.moveVelocityCmd(false)
+        .alongWith(m_algaeShoot.moveVelocityCmd(false)));
     m_operCmdController.a() // spit algae rear
         .whileTrue(m_algaeConv.moveVelocityCmd(true));
 

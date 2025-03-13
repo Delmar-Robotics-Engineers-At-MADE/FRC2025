@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.HoldAlgaeCmd;
@@ -30,6 +31,7 @@ public class AlgaeConveyerSS extends SubsystemBase{
   static final int DIONumPhotoEye = 1;
   static final double PositionTolerance = 10; // degrees
   static final double VelocityV = 50000;  // degrees per minute
+  static final double OpenLoopSpeed = 0.3;
   static final double MRTOORTD = 360 / 20; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motorStar;
@@ -107,13 +109,20 @@ public class AlgaeConveyerSS extends SubsystemBase{
   }
 
   public void moveVelocityControl (boolean in) {
-    closedLoopController.setReference(VelocityV * (in?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+    // closedLoopController.setReference(VelocityV * (in?1:-1), ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+    m_motorStar.set(OpenLoopSpeed * (in?-1:1));
+  }
+  public void stop () {
+    // closedLoopController.setReference(0, ControlType.kMAXMotionVelocityControl, ClosedLoopSlot.kSlot1);
+    m_motorStar.set(0);
   }
 
   public Command moveVelocityCmd(boolean in) {
     return new RunCommand(() -> moveVelocityControl(in), this);
   }
-
+  public Command stopCommand() {
+    return new InstantCommand(() -> stop(), this);
+  }
   public boolean getAlgaePresent () {return m_photoEye.get() == false;}
 
 }
