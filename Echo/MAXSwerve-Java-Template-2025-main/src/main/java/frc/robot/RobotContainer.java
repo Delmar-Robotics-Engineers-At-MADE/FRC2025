@@ -139,7 +139,28 @@ public class RobotContainer {
     // }
   }
 
+  private Command driveToProcessorCmd () {
+    return driveToAprilTagCommand (3, HornSelection.Between);
+  }
+  private Command driveToCoralStationCmd (HornSelection hornSelect) {
+    if (hornSelect == HornSelection.L){
+        return driveToAprilTagCommand (1, HornSelection.Between);
+    } else {
+        return driveToAprilTagCommand (2, HornSelection.Between);        
+    }
+  }
+
+
   private void buildAutoChooser() {
+
+    // exit staring zone, driving backward toward alliance station
+    m_autoExitStartingZone = new InstantCommand(() -> m_robotDrive.drive(-PovSpeed, 0, 0, false),m_robotDrive)
+        .andThen(new WaitCommand(1))
+        .andThen(new InstantCommand(() -> m_robotDrive.drive(0, 0, 0, false),m_robotDrive))
+        .andThen(() -> m_robotDrive.zeroHeading());
+    m_autoChooser.setDefaultOption("Exit Start Zone", m_autoExitStartingZone);
+
+    // drive to reef position and score coral
     m_autoToReef1LToCoralStation = new WaitUntilCommand(() -> m_photon.getPoseEstimateAcquired())
         .andThen(driveToReefPositionCmd(1, HornSelection.L))
         //.andThen(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
@@ -154,23 +175,14 @@ public class RobotContainer {
     m_autoToReef2RToCoralStation = driveToReefPositionCmd(2, HornSelection.R);
     m_autoToReef4LToCoralStation = driveToReefPositionCmd(4, HornSelection.L);
     m_autoToReef4RToCoralStation = driveToReefPositionCmd(4, HornSelection.R);
-    m_autoChooser.setDefaultOption("To Reef 1L", m_autoToReef1LToCoralStation);
+    m_autoChooser.addOption("To Reef 1L", m_autoToReef1LToCoralStation);
     // m_autoChooser.addOption("To Reef 1R", m_autoToReef1RToCoralStation);
     // m_autoChooser.addOption("To Reef 2L", m_autoToReef2LToCoralStation);
     // m_autoChooser.addOption("To Reef 2R", m_autoToReef2RToCoralStation);
     // m_autoChooser.addOption("To Reef 4L", m_autoToReef4LToCoralStation);
     // m_autoChooser.addOption("To Reef 4R", m_autoToReef4RToCoralStation);
 
-    // exit staring zone, driving backward toward alliance station
-    m_autoExitStartingZone = new InstantCommand(() -> m_robotDrive.drive(-PovSpeed, 0, 0, false),m_robotDrive)
-        .andThen(new WaitCommand(1))
-        .andThen(new InstantCommand(() -> m_robotDrive.drive(0, 0, 0, false),m_robotDrive))
-        .andThen(() -> m_robotDrive.zeroHeading());
-    m_autoChooser.addOption("Exit Start Zone", m_autoExitStartingZone);
   }
-
-    
-
 
   private void configureNonButtonTriggers() {
     new Trigger(() -> m_coral.getCoralPresent())
@@ -179,6 +191,8 @@ public class RobotContainer {
         .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
   }
 
+  static final int FlightButtonLEFT = 3;
+  static final int FlightButtonRIGHT = 4;
   private void configureButtonBindings() {
 
     // *************************** DRIVER *****************************
@@ -187,49 +201,57 @@ public class RobotContainer {
         .onTrue(new InstantCommand(() -> m_robotDrive.zeroHeading(),m_robotDrive));
 
     // reef positions
-    m_driverCmdController.button(3).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(1, HornSelection.L));
-    m_driverCmdController.button(4).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(1, HornSelection.R));
     m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(1, HornSelection.Between));
-    m_driverCmdController.button(3).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(2, HornSelection.L));
-    m_driverCmdController.button(4).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(2, HornSelection.R));
     m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(2, HornSelection.Between));
-    m_driverCmdController.button(3).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(3, HornSelection.L));
-    m_driverCmdController.button(4).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(3, HornSelection.R));
     m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(3, HornSelection.Between));
-    m_driverCmdController.button(3).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(4, HornSelection.L));
-    m_driverCmdController.button(4).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(4, HornSelection.R));
     m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(4, HornSelection.Between));
-    m_driverCmdController.button(3).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(5, HornSelection.L));
-    m_driverCmdController.button(4).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(5, HornSelection.R));
     m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(5, HornSelection.Between));
-    m_driverCmdController.button(3).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(6, HornSelection.L));
-    m_driverCmdController.button(4).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
+    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(6, HornSelection.R));
     m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(6, HornSelection.Between));
 
     // Coral stations and Processor
+    m_buttonPadCmd.button(5).and(m_photon::getPoseEstimateAcquired) // processor
+        .whileTrue(driveToProcessorCmd());
+    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.axisGreaterThan(2,TriggerThreshold))
+        .whileTrue(driveToCoralStationCmd(HornSelection.L));
+    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.axisGreaterThan(2,TriggerThreshold))
+        .whileTrue(driveToCoralStationCmd(HornSelection.R));
 
     // intake algae
-    m_driverCmdController.button(1)
-        .whileTrue(new WaitUntilCommand(() -> !m_algaeConv.getAlgaePresent())
-        .andThen(m_algaeConv.moveVelocityCmd(true)));
+    // can't reach floor, so no driver control right now
+    // m_driverCmdController.button(1)
+    //     .whileTrue(new WaitUntilCommand(() -> !m_algaeConv.getAlgaePresent())
+    //     .andThen(m_algaeConv.moveVelocityCmd(true)));
+
 
     // set X
     m_driverCmdController.povDown().or(m_driverCmdController.povDownLeft())
@@ -252,7 +274,7 @@ public class RobotContainer {
 
     m_operCmdController.rightBumper() // intake
         .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation)
-        .andThen(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
+        .alongWith(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
     m_operCmdController.rightBumper().and(() -> !m_coral.getCoralPresent())
         .whileTrue(m_coral.moveVelocityCmd(true))
         .onFalse(m_coral.stopCommand());
@@ -260,29 +282,24 @@ public class RobotContainer {
         .whileTrue(m_coral.moveVelocityCmd(false))
         .onFalse(m_coral.stopCommand());
 
+    m_operCmdController.b().whileTrue(new MoveWristCmd(m_wrist, WristPosition.CoralStation));
+
     // algae in/out
 
     m_operCmdController.leftBumper().and(() -> !m_algaeConv.getAlgaePresent()) // intake from Reef
         .whileTrue(m_algaeConv.moveVelocityCmd(true)
         .alongWith(m_algaeShoot.moveVelocityCmd(true)));
-    m_operCmdController.leftTrigger(TriggerThreshold) // score
+    m_operCmdController.leftTrigger(TriggerThreshold) // shoot
         .onTrue(new SpinAlgaeShtrCmd(m_algaeShoot))
         .onFalse(m_coral.stopCommand());
-    m_operCmdController.leftTrigger(TriggerThreshold) // score
+    m_operCmdController.leftTrigger(TriggerThreshold) // shoot
         .whileTrue(m_algaeConv.moveVelocityCmd(false)
         .alongWith(m_algaeShoot.moveVelocityCmd(false)));
 
-    m_operCmdController.a().and(m_operCmdController.povLeft()) // spit algae front
-        .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
-        .andThen(m_algaeConv.moveVelocityCmd(false)));
-    m_operCmdController.a().and(m_operCmdController.povDown()) // spit algae rear
-        .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
-        .andThen(m_algaeConv.moveVelocityCmd(true)));
-    m_operCmdController.a().and(m_operCmdController.povUp()) // shoot algae
-        .whileTrue(new WaitUntilCommand(() -> m_algaeConv.getAlgaePresent())
-        .andThen(m_algaeConv.moveVelocityCmd(false)));
-    m_operCmdController.a().and(m_operCmdController.povRight()) // shoot algae
+    m_operCmdController.y() // spit algae front
         .whileTrue(m_algaeConv.moveVelocityCmd(false));
+    m_operCmdController.a() // spit algae rear
+        .whileTrue(m_algaeConv.moveVelocityCmd(true));
 
     // example NOT-ing a button:
     // m_operCmdController.povRight().and(() -> !m_operController.getAButton())

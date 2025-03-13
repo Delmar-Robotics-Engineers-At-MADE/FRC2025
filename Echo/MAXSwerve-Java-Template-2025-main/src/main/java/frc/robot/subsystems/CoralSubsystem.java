@@ -32,7 +32,7 @@ public class CoralSubsystem extends SubsystemBase{
   // static final int CANIDFusion = 1; // fusion line of flight sensor
   static final int DIONumPhotoEye = 2;
   static final double PositionTolerance = 10; // degrees
-  static final double VelocityV = 50000;  // degrees per minute
+  static final double VelocityV = 15000;  // degrees per minute
   static final double MRTOORTD = 360 / 20; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
   private SparkMax m_motor;

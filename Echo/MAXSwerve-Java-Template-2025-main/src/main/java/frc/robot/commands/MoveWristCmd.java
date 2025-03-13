@@ -31,6 +31,7 @@ public class MoveWristCmd extends Command {
   @Override
   public void initialize() {
     // just need to do this once
+    System.out.println("cmd moving wrist");
     m_wrist.moveToPosition(m_target); 
   }
   

@@ -23,7 +23,7 @@ import frc.robot.commands.Hold2BarCmd;
 public class Manipulator2BarSS extends SubsystemBase{
 
   public static final class ArmPosition {
-    public static final double CoralStation = 265;
+    public static final double CoralStation = 300;
     public static final double Home = 220;
     public static final double StraightUp = 180;
     public static final double T3 = 140;

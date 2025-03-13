@@ -23,7 +23,7 @@ import frc.robot.commands.HoldWristCmd;
 public class WristSubsystem extends SubsystemBase{
 
   public static final class WristPosition {
-    public static final double CoralStation = 95;
+    public static final double CoralStation = -40;
   }
 
   static final int CANIDPort = 24;
@@ -64,7 +64,7 @@ public class WristSubsystem extends SubsystemBase{
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(0.4 /MRTOORTD)
+        .p(1 /MRTOORTD)
         .i(0)
         .d(0.11)
         .outputRange(-1, 1)
@@ -102,6 +102,8 @@ public class WristSubsystem extends SubsystemBase{
     matchTab.addBoolean("Wrist Hot Port", () -> getTempGoodPort()).withPosition(8, 0);
     matchTab.addBoolean("Wrist Hot Star", () -> getTempGoodStar()).withPosition(9, 0);
     debugTab.addDouble("Angle", () -> getAngle());
+    debugTab.addDouble("Temp Port", () -> getTempPort());
+    debugTab.addDouble("Temp Starboard", () -> getTempStar());
 
     // setDefaultCommand(new HoldWristCmd(this));
   
@@ -129,13 +131,14 @@ public class WristSubsystem extends SubsystemBase{
     if (m_homed) {
       m_overtempPort = m_motorPort.getMotorTemperature() < MaxTemp;
       m_overtempStar = m_motorStar.getMotorTemperature() < MaxTemp;
-      if (m_overtempPort || m_overtempStar) {
-        // motor(s) too hot, move to home position instead
-        angle = 0;
-        System.out.println("************* Wrist motors too hot; homing **********");
-      }
+      // if (m_overtempPort || m_overtempStar) {
+      //   // motor(s) too hot, move to home position instead
+      //   angle = 0;
+      //   System.out.println("************* Wrist motors too hot; homing **********");
+      // }
       double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
       double feedForward = kFF * Math.sin(currAngle);
+      System.out.println("moving wrist");
       closedLoopController.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0, feedForward);
     } else {
       System.out.println("************* Wrist motor not homed, can't move to position **********");
@@ -175,5 +178,7 @@ public class WristSubsystem extends SubsystemBase{
   public boolean getTempGoodStar () {return !m_overtempStar;}
   public boolean getPhotoEye () {return m_photoEye.get();}
   public double getAngle () {return m_encoderPort.getPosition();}
+  public double getTempPort () {return m_motorPort.getMotorTemperature();}
+  public double getTempStar () {return m_motorStar.getMotorTemperature();}
 
 }
