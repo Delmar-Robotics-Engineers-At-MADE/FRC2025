@@ -26,6 +26,7 @@ public class Manipulator2BarSS extends SubsystemBase{
     public static final double CoralStation = 300;
     public static final double Home = 220;
     public static final double StraightUp = 180;
+    public static final double T3plus = 160;
     public static final double T3 = 140;
     public static final double T2 = 100;
   }

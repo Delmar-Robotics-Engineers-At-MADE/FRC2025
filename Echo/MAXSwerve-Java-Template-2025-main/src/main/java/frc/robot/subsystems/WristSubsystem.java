@@ -65,7 +65,7 @@ public class WristSubsystem extends SubsystemBase{
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(1 /MRTOORTD)
+        .p(1.5 /MRTOORTD) // 1
         .i(0)
         .d(0.11)
         .outputRange(-1, 1)
@@ -127,7 +127,7 @@ public class WristSubsystem extends SubsystemBase{
     }
   }
 
-  static final double MaxTemp = 100; // celsius
+  static final double MaxTemp = 400; // celsius
   public void moveToPosition (double angle) {
     if (m_homed) {
       m_overtempPort = m_motorPort.getMotorTemperature() > MaxTemp;
@@ -137,8 +137,8 @@ public class WristSubsystem extends SubsystemBase{
         angle = 0;
         System.out.println("************* Wrist motors too hot; homing **********");
       }
-      double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
-      double feedForward = kFF * Math.sin(currAngle);
+      //double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
+      double feedForward = kFF * Math.sin(angle);
       System.out.println("moving wrist");
       closedLoopController.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0, feedForward);
     } else {

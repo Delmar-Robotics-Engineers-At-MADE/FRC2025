@@ -155,7 +155,7 @@ public class RobotContainer {
 
     // exit staring zone, driving backward toward alliance station
     m_autoExitStartingZone = new InstantCommand(() -> m_robotDrive.drive(-PovSpeed, 0, 0, false),m_robotDrive)
-        .andThen(new WaitCommand(1))
+        .andThen(new WaitCommand(1.5))
         .andThen(new InstantCommand(() -> m_robotDrive.drive(0, 0, 0, false),m_robotDrive))
         .andThen(() -> m_robotDrive.zeroHeading());
     m_autoChooser.setDefaultOption("Exit Start Zone", m_autoExitStartingZone);
@@ -316,6 +316,9 @@ public class RobotContainer {
     m_operCmdController.povLeft()
 //    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
         .onTrue(new Move2BarCmd(m_arm, ArmPosition.T2));
+    m_operCmdController.povUp()
+//    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.T3plus));
 
     // home position
     m_operCmdController.x().onTrue(new Move2BarCmd(m_arm, ArmPosition.Home));
