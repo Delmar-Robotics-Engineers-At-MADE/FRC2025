@@ -69,7 +69,7 @@ public class Manipulator2BarSS extends SubsystemBase{
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(0.9 /MRTOORTD) // 0.9
+        .p(3 /MRTOORTD) // 0.9
         .i(0)
         .d(0.01)
         .outputRange(-1, 1)
@@ -106,6 +106,8 @@ public class Manipulator2BarSS extends SubsystemBase{
     matchTab.addBoolean("2Bar Port Homed", () -> getHomedPort()).withPosition(4, 0);
     matchTab.addBoolean("2Bar Star Homed", () -> getHomedStar()).withPosition(5, 0);
     debugTab.addDouble("Angle", () -> getAngle());
+    debugTab.addDouble("Ouput Port", () -> m_motorPort.getAppliedOutput());
+    debugTab.addDouble("Output Starboard", () -> m_motorStar.getAppliedOutput());
 
     setDefaultCommand(new Hold2BarCmd(this));
   

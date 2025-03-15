@@ -23,7 +23,7 @@ import frc.robot.commands.HoldWristCmd;
 public class WristSubsystem extends SubsystemBase{
 
   public static final class WristPosition {
-    public static final double CoralStation = -40;
+    public static final double CoralStation = 70;
     public static final double Home = 0;
   }
 
@@ -34,16 +34,17 @@ public class WristSubsystem extends SubsystemBase{
   static final double kFF = 2.5;
   static final double PositionTolerance = 2; // degrees
   static final double VelocityV = 10000;  // degrees per minute
-  static final double MRTOORTD = 360 / 6; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
+  static final double MRTOORTD = 360 / (6 * 1.8462); // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
 
-  private SparkMax m_motorPort, m_motorStar;
+  private SparkMax /* m_motorPort, */ m_motorStar;
   private SparkMaxConfig motorConfig;
   private SparkClosedLoopController closedLoopController;
   private RelativeEncoder m_encoderPort;
   private DigitalInput m_photoEye;
   private boolean m_homed = false;
   private double m_holdPosition = 0;
-  private boolean m_overtempPort, m_overtempStar;
+  private boolean m_overtempPort = false;
+  private boolean m_overtempStar = false;
 
   // shuffleboard stuff
   private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
@@ -51,10 +52,12 @@ public class WristSubsystem extends SubsystemBase{
 
   public WristSubsystem() {
     m_photoEye = new DigitalInput(DIONum);
-    m_motorPort = new SparkMax(CANIDPort, MotorType.kBrushless);
+    //m_motorPort = new SparkMax(CANIDPort, MotorType.kBrushless);
     m_motorStar = new SparkMax(CANIDStar, MotorType.kBrushless);
-    closedLoopController = m_motorPort.getClosedLoopController();
-    m_encoderPort = m_motorPort.getEncoder();
+    closedLoopController = m_motorStar.getClosedLoopController();
+    // closedLoopController = m_motorPort.getClosedLoopController();
+    // m_encoderPort = m_motorPort.getEncoder();
+    m_encoderPort = m_motorStar.getEncoder();
 
     motorConfig = new SparkMaxConfig();
     motorConfig.encoder
@@ -89,10 +92,10 @@ public class WristSubsystem extends SubsystemBase{
 
     motorConfig.idleMode(IdleMode.kBrake);
 
-    m_motorPort.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    // m_motorPort.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // second motor inverted and following first
-    motorConfig.follow(CANIDPort, true);
+    // motorConfig.follow(CANIDPort, true);
     m_motorStar.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // Already homed?  Hope so, at beginning of match
@@ -115,7 +118,15 @@ public class WristSubsystem extends SubsystemBase{
     System.out.println("Wrist holding current position " + m_holdPosition);
     double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
     double feedForward = kFF * Math.sin(currAngle);
-    closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0, feedForward);
+    m_overtempPort = false; // m_motorPort.getMotorTemperature() > MaxTemp;
+    m_overtempStar = m_motorStar.getMotorTemperature() > MaxTemp;
+    if (m_overtempPort || m_overtempStar) {
+      // motor(s) too hot, move to home position instead
+      m_motorStar.set(0);
+      System.out.println("************* Wrist motors too hot; homing **********");
+    } else {
+      closedLoopController.setReference(m_holdPosition, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0, feedForward);
+    }
   }
 
   public void checkForHomePosition () {
@@ -130,17 +141,18 @@ public class WristSubsystem extends SubsystemBase{
   static final double MaxTemp = 400; // celsius
   public void moveToPosition (double angle) {
     if (m_homed) {
-      m_overtempPort = m_motorPort.getMotorTemperature() > MaxTemp;
+      m_overtempPort = false; // m_motorPort.getMotorTemperature() > MaxTemp;
       m_overtempStar = m_motorStar.getMotorTemperature() > MaxTemp;
       if (m_overtempPort || m_overtempStar) {
         // motor(s) too hot, move to home position instead
-        angle = 0;
+        m_motorStar.set(0);
         System.out.println("************* Wrist motors too hot; homing **********");
+      } else {
+        //double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
+        double feedForward = kFF * Math.sin(angle);
+        System.out.println("moving wrist");
+        closedLoopController.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0, feedForward);
       }
-      //double currAngle = Math.toRadians(m_encoderPort.getPosition());  // calculate angle in rads
-      double feedForward = kFF * Math.sin(angle);
-      System.out.println("moving wrist");
-      closedLoopController.setReference(angle, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0, feedForward);
     } else {
       System.out.println("************* Wrist motor not homed, can't move to position **********");
     }
@@ -179,7 +191,7 @@ public class WristSubsystem extends SubsystemBase{
   public boolean getTempGoodStar () {return !m_overtempStar;}
   public boolean getPhotoEye () {return m_photoEye.get();}
   public double getAngle () {return m_encoderPort.getPosition();}
-  public double getTempPort () {return m_motorPort.getMotorTemperature();}
+  public double getTempPort () {return 0; /* m_motorPort.getMotorTemperature() ; */}
   public double getTempStar () {return m_motorStar.getMotorTemperature();}
 
 }

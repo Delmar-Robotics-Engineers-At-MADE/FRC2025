@@ -28,13 +28,13 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 public class Robot extends TimedRobot {
 
-  static final int Motor1CANID = 22;
-  static final int Motor2CANID = 23;
-  static final double MRTOORTD = 360 / 27.46; // Motor Rotations To One Output Rotation To Degrees
-  static final double HomeAngle = 310;
+  //static final int Motor1CANID = 24;
+  static final int Motor2CANID = 25;
+  static final double MRTOORTD = 360 / (6 *  1.8462); // Motor Rotations To One Output Rotation To Degrees
+  static final double HomeAngle = 0 ;
   static final double PositionTolerance = 2; // degrees
 
-  private SparkMax motor, motor2;
+  private SparkMax motor/*, motor2*/;
   private SparkMaxConfig motorConfig;
   private SparkClosedLoopController closedLoopController;
   private RelativeEncoder encoder;
@@ -56,8 +56,8 @@ public class Robot extends TimedRobot {
      * Initialize the SPARK MAX and get its encoder and closed loop controller
      * objects for later use.
      */
-    motor = new SparkMax(Motor1CANID, MotorType.kBrushless);
-    motor2 = new SparkMax(Motor2CANID, MotorType.kBrushless);
+    motor = new SparkMax(Motor2CANID, MotorType.kBrushless);
+    //motor2 = new SparkMax(Motor2CANID, MotorType.kBrushless);
     closedLoopController = motor.getClosedLoopController();
     encoder = motor.getEncoder();
 
@@ -85,7 +85,7 @@ public class Robot extends TimedRobot {
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(1 /MRTOORTD)
+        .p(0 /MRTOORTD)
         .i(0)
         .d(0)
         .outputRange(-1, 1)
@@ -120,14 +120,14 @@ public class Robot extends TimedRobot {
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // second motor inverted and following first
-    motorConfig.follow(Motor1CANID, true);
-    motor2.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    motorConfig.follow(Motor2CANID, true);
+    //motor2.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // set up read-only widgets of dashboard
     shuffTab.addDouble("Actual Position", () -> encoder.getPosition());
     shuffTab.addDouble("Actual Velocity", () -> encoder.getVelocity());
-    shuffTab.addDouble("Temp Port", () -> motor.getMotorTemperature());
-    shuffTab.addDouble("Temp Star", () -> motor2.getMotorTemperature());
+    shuffTab.addDouble("Temp Star", () -> motor.getMotorTemperature());
+    //shuffTab.addDouble("Temp Star", () -> motor2.getMotorTemperature());
 
   }
 

@@ -63,7 +63,7 @@ public class RobotContainer {
   private final AlgaeConveyerSS m_algaeConv = new AlgaeConveyerSS();
   private final AlgaeShooterSS m_algaeShoot = new AlgaeShooterSS();
   private final Manipulator2BarSS m_arm = new Manipulator2BarSS();
-  private final WristSubsystem m_wrist = new WristSubsystem();
+  //private final WristSubsystem m_wrist = new WristSubsystem();
 
   // for auto driving
 //   Alliance m_allianceColor = DriverStation.getAlliance().get();
@@ -155,7 +155,7 @@ public class RobotContainer {
 
     // exit staring zone, driving backward toward alliance station
     m_autoExitStartingZone = new InstantCommand(() -> m_robotDrive.drive(-PovSpeed, 0, 0, false),m_robotDrive)
-        .andThen(new WaitCommand(1.5))
+        .andThen(new WaitCommand(3))
         .andThen(new InstantCommand(() -> m_robotDrive.drive(0, 0, 0, false),m_robotDrive))
         .andThen(() -> m_robotDrive.zeroHeading());
     m_autoChooser.setDefaultOption("Exit Start Zone", m_autoExitStartingZone);
@@ -273,18 +273,18 @@ public class RobotContainer {
     // coral in/out
 
     m_operCmdController.rightBumper() // intake
-        .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation)
-        .alongWith(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation));
+        //.alongWith(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
     m_operCmdController.rightBumper().and(() -> !m_coral.getCoralPresent())
         .whileTrue(m_coral.moveVelocityCmd(true))
         .onFalse(m_coral.stopCommand());
-    m_operCmdController.rightTrigger(TriggerThreshold) // score
-        .onTrue(new MoveWristCmd(m_wrist, WristPosition.Home));
+    // m_operCmdController.rightTrigger(TriggerThreshold) // score
+    //     .onTrue(new MoveWristCmd(m_wrist, WristPosition.Home));
     m_operCmdController.rightTrigger(TriggerThreshold) 
         .whileTrue(m_coral.moveVelocityCmd(false))
         .onFalse(m_coral.stopCommand());
 
-    m_operCmdController.b().whileTrue(new MoveWristCmd(m_wrist, WristPosition.CoralStation));
+    // m_operCmdController.b().whileTrue(new MoveWristCmd(m_wrist, WristPosition.CoralStation));
 
     // algae in/out
 
@@ -411,6 +411,6 @@ public class RobotContainer {
   public void checkHomePositions() {
     m_elevator.checkForHomePosition();
     m_arm.checkForHomePosition();
-    m_wrist.checkForHomePosition();
+    // m_wrist.checkForHomePosition();
   }
 }
