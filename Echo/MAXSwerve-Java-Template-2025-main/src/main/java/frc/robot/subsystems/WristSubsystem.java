@@ -34,7 +34,9 @@ public class WristSubsystem extends SubsystemBase{
   static final double kFF = 2.5;
   static final double PositionTolerance = 2; // degrees
   static final double VelocityV = 10000;  // degrees per minute
-  static final double MRTOORTD = 360 / (6 * 1.8462); // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
+  static final double MRTOORTD = 360 / (6 * 1.8462 * (80/3)); // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
+                                                              // changed sprocket from 26 teeth to 48 teeth (48/26 = 1.8 higher ratio)
+                                                              // replaced 3x1 with 5x4x4 (5x4x4 / 3 = 26.6 higher ratio)
 
   private SparkMax /* m_motorPort, */ m_motorStar;
   private SparkMaxConfig motorConfig;

@@ -59,11 +59,11 @@ public class RobotContainer {
   private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_photon);
 //   private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
   private final Blinkin m_blinkin = new Blinkin();
-//   private final CoralSubsystem m_coral = new CoralSubsystem();
-//   private final AlgaeConveyerSS m_algaeConv = new AlgaeConveyerSS();
-//   private final AlgaeShooterSS m_algaeShoot = new AlgaeShooterSS();
-//   private final Manipulator2BarSS m_arm = new Manipulator2BarSS();
-  //private final WristSubsystem m_wrist = new WristSubsystem();
+  private final CoralSubsystem m_coral = new CoralSubsystem();
+  private final AlgaeConveyerSS m_algaeConv = new AlgaeConveyerSS();
+  private final AlgaeShooterSS m_algaeShoot = new AlgaeShooterSS();
+  private final Manipulator2BarSS m_arm = new Manipulator2BarSS();
+  private final WristSubsystem m_wrist = new WristSubsystem();
 
   // for auto driving
 //   Alliance m_allianceColor = DriverStation.getAlliance().get();
@@ -164,11 +164,11 @@ public class RobotContainer {
     m_autoToReef1LToCoralStation = new WaitUntilCommand(() -> m_photon.getPoseEstimateAcquired())
         .andThen(driveToReefPositionCmd(1, HornSelection.L))
         //.andThen(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
-        // .andThen(new Move2BarCmd(m_arm, ArmPosition.T3))
-        // .andThen(m_coral.moveVelocityOnceCmd(false))
+        .andThen(new Move2BarCmd(m_arm, ArmPosition.T3))
+        .andThen(m_coral.moveVelocityOnceCmd(false))
         .andThen(new WaitCommand(4))
-        // .andThen(m_coral.stopCommand())
-        // .andThen(new Move2BarCmd(m_arm, ArmPosition.Home))
+        .andThen(m_coral.stopCommand())
+        .andThen(new Move2BarCmd(m_arm, ArmPosition.Home))
         .andThen(rotateDownfieldCommand());
     m_autoToReef1RToCoralStation = driveToReefPositionCmd(1, HornSelection.R);
     m_autoToReef2LToCoralStation = driveToReefPositionCmd(2, HornSelection.L);
@@ -185,10 +185,10 @@ public class RobotContainer {
   }
 
   private void configureNonButtonTriggers() {
-    // new Trigger(() -> m_coral.getCoralPresent())
-    //     .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.grey));
-    // new Trigger(() -> m_algaeConv.getAlgaePresent())
-    //     .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
+    new Trigger(() -> m_coral.getCoralPresent())
+        .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.grey));
+    new Trigger(() -> m_algaeConv.getAlgaePresent())
+        .whileTrue(new SetBlinkinColorCmd(m_blinkin, LEDConstants.green));
   }
 
   static final int FlightButtonLEFT = 3;
@@ -272,37 +272,37 @@ public class RobotContainer {
 
     // coral in/out
 
-    // m_operCmdController.rightBumper() // intake
-    //     .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation))   ;
-        //.alongWith(new MoveWristCmd(m_wrist, WristPosition.CoralStation)));
-    // m_operCmdController.rightBumper().and(() -> !m_coral.getCoralPresent())
-    //     .whileTrue(m_coral.moveVelocityCmd(true))
-    //     .onFalse(m_coral.stopCommand());
+    m_operCmdController.rightBumper() // intake
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.CoralStation))   
+        .alongWith(new MoveWristCmd(m_wrist, WristPosition.CoralStation));
+    m_operCmdController.rightBumper().and(() -> !m_coral.getCoralPresent())
+        .whileTrue(m_coral.moveVelocityCmd(true))
+        .onFalse(m_coral.stopCommand())
     // m_operCmdController.rightTrigger(TriggerThreshold) // score
-    //     .onTrue(new MoveWristCmd(m_wrist, WristPosition.Home));
-    // m_operCmdController.rightTrigger(TriggerThreshold) 
-    //     .whileTrue(m_coral.moveVelocityCmd(false))
-    //     .onFalse(m_coral.stopCommand());
+        .onTrue(new MoveWristCmd(m_wrist, WristPosition.Home));
+    m_operCmdController.rightTrigger(TriggerThreshold) 
+        .whileTrue(m_coral.moveVelocityCmd(false))
+        .onFalse(m_coral.stopCommand());
 
     // m_operCmdController.b().whileTrue(new MoveWristCmd(m_wrist, WristPosition.CoralStation));
 
     // algae in/out
 
-    // m_operCmdController.leftBumper().and(() -> !m_algaeConv.getAlgaePresent()) // intake from Reef
-    //     .whileTrue(m_algaeConv.moveVelocityCmd(true)
-    //     .alongWith(m_algaeShoot.moveVelocityCmd(true)));
-    // m_operCmdController.leftTrigger(TriggerThreshold) // shoot
-    //     .onTrue(new SpinAlgaeShtrCmd(m_algaeShoot))
-    //     .onFalse(m_algaeConv.stopCommand());
-    // m_operCmdController.leftTrigger(TriggerThreshold) // shoot
-    //     .whileTrue(m_algaeConv.moveVelocityCmd(false)
-    //     .alongWith(m_algaeShoot.moveVelocityCmd(false)));
+    m_operCmdController.leftBumper().and(() -> !m_algaeConv.getAlgaePresent()) // intake from Reef
+        .whileTrue(m_algaeConv.moveVelocityCmd(true)
+        .alongWith(m_algaeShoot.moveVelocityCmd(true)));
+    m_operCmdController.leftTrigger(TriggerThreshold) // shoot
+        .onTrue(new SpinAlgaeShtrCmd(m_algaeShoot))
+        .onFalse(m_algaeConv.stopCommand());
+    m_operCmdController.leftTrigger(TriggerThreshold) // shoot
+        .whileTrue(m_algaeConv.moveVelocityCmd(false)
+        .alongWith(m_algaeShoot.moveVelocityCmd(false)));
 
-    // m_operCmdController.y() // spit algae front
-    //     .whileTrue(m_algaeConv.moveVelocityCmd(false)
-    //     .alongWith(m_algaeShoot.moveVelocityCmd(false)));
-    // m_operCmdController.a() // spit algae rear
-    //     .whileTrue(m_algaeConv.moveVelocityCmd(true));
+    m_operCmdController.y() // spit algae front
+        .whileTrue(m_algaeConv.moveVelocityCmd(false)
+        .alongWith(m_algaeShoot.moveVelocityCmd(false)));
+    m_operCmdController.a() // spit algae rear
+        .whileTrue(m_algaeConv.moveVelocityCmd(true));
 
     // example NOT-ing a button:
     // m_operCmdController.povRight().and(() -> !m_operController.getAButton())
@@ -310,18 +310,18 @@ public class RobotContainer {
         
     // move to Reef Position
 //    m_operCmdController.povDown().whileTrue(m_elevator.moveToReefLevelCmd(1)
-//     m_operCmdController.povRight()
-// //    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
-//         .onTrue(new Move2BarCmd(m_arm, ArmPosition.T3));
-//     m_operCmdController.povLeft()
-// //    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
-//         .onTrue(new Move2BarCmd(m_arm, ArmPosition.T2));
-//     m_operCmdController.povUp()
-// //    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
-//         .onTrue(new Move2BarCmd(m_arm, ArmPosition.T3plus));
+    m_operCmdController.povRight()
+//    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.T3));
+    m_operCmdController.povLeft()
+//    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.T2));
+    m_operCmdController.povUp()
+//    .whileTrue(m_elevator.moveToPositionCommand(ElPosition.MoveOffStart)
+        .onTrue(new Move2BarCmd(m_arm, ArmPosition.T3plus));
 
     // home position
-    // m_operCmdController.x().onTrue(new Move2BarCmd(m_arm, ArmPosition.Home));
+    m_operCmdController.x().onTrue(new Move2BarCmd(m_arm, ArmPosition.Home));
 
     // Manual control when Back or Start buttons are pressed
     // m_operCmdController.start().and(m_operCmdController.leftBumper())
@@ -410,7 +410,7 @@ public class RobotContainer {
 
   public void checkHomePositions() {
     // m_elevator.checkForHomePosition();
-    // m_arm.checkForHomePosition();
-    // m_wrist.checkForHomePosition();
+    m_arm.checkForHomePosition();
+    m_wrist.checkForHomePosition();
   }
 }

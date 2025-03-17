@@ -38,7 +38,8 @@ public class Manipulator2BarSS extends SubsystemBase{
   static final double kFF = 1.7;
   static final double PositionTolerance = 2; // degrees
   static final double VelocityV = 10000;  // degrees per minute
-  static final double MRTOORTD = 360 / 27.46; // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
+  static final double MRTOORTD = 360 / (27.46 * 15); // Motor Rotations To One Output Rotation To Degrees; main swerve is 5.49
+                                                    // added 5:1 and 3:1 on Saturday
 
   private SparkMax m_motorPort, m_motorStar;
   private SparkMaxConfig motorConfig;
