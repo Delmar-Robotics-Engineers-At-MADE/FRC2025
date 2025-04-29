@@ -49,6 +49,8 @@ public class DriveSubsystem extends SubsystemBase {
 
   // Constants
   static final double SlideToTheHornDistance = 0.12; // meters to slide left or right
+  static final double DriveSpeedDivider = 4;
+
 
   // Create MAXSwerveModules
   private final MAXSwerveModule m_frontLeft = new MAXSwerveModule(
@@ -279,8 +281,8 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
     // Convert the commanded speeds into the correct units for the drivetrain
-    double xSpeedDelivered = xSpeed * DriveConstants.kMaxSpeedMetersPerSecond;
-    double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond;
+    double xSpeedDelivered = xSpeed * DriveConstants.kMaxSpeedMetersPerSecond / DriveSpeedDivider;
+    double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond / DriveSpeedDivider;
     double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
 
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
