@@ -49,7 +49,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   // Constants
   static final double SlideToTheHornDistance = 0.12; // meters to slide left or right
-  static final double DriveSpeedDivider = 4;
+  public static final double DriveSpeedDivider = 4;
 
 
   // Create MAXSwerveModules
@@ -283,7 +283,7 @@ public class DriveSubsystem extends SubsystemBase {
     // Convert the commanded speeds into the correct units for the drivetrain
     double xSpeedDelivered = xSpeed * DriveConstants.kMaxSpeedMetersPerSecond / DriveSpeedDivider;
     double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond / DriveSpeedDivider;
-    double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
+    double rotDelivered = rot * DriveConstants.kMaxAngularSpeed / DriveSpeedDivider;
 
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
@@ -379,12 +379,14 @@ public class DriveSubsystem extends SubsystemBase {
     m_aprilTargetForTeleop = id;
     double targetX = 0.0; double targetY = 0.0; double rot = 0.0;
     switch (id) {
-      case 1: targetX = 16.47987442; targetY = 0.962976864; rot = Math.toRadians(-54); break;
+      // case 1: targetX = 16.47987442; targetY = 0.962976864; rot = Math.toRadians(-54); break;
+      case 1: targetX = 15.68; targetY = 0; rot = Math.toRadians(120); break; // for summer
       case 2: targetX = 16.47987442; targetY = 7.097023136; rot = Math.toRadians(54); break;
       case 3: targetX = 11.56; targetY = 7.6855; rot = Math.toRadians(90); break;
       case 4: targetX = 9.6545; targetY = 6.14; rot = Math.toRadians(-180); break;
       case 5: targetX = 9.6545; targetY = 1.91; rot = Math.toRadians(-180); break;
-      case 6: targetX = 13.65725; targetY = 2.98; rot = Math.toRadians(120); break;
+      // case 6: targetX = 13.65725; targetY = 2.98; rot = Math.toRadians(120); break;
+      case 6: targetX = 13.77; targetY = 2.69; rot = Math.toRadians(-60); break; // for summer
       case 7: targetX = 14.26; targetY = 4.03; rot = Math.toRadians(180); break;
       case 8: targetX = 13.65725; targetY = 5.074326514; rot = Math.toRadians(-120); break;
       case 9: targetX = 12.45275; targetY = 5.074326514; rot = Math.toRadians(-60); break;

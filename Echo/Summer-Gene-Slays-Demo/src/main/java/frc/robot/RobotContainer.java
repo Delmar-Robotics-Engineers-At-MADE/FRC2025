@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 public class RobotContainer {
 
   static final double TriggerThreshold = 0.5;
-  static final double PovSpeed = 0.1;
+  static final double PovSpeed = 0.1 * DriveSubsystem.DriveSpeedDivider;  // speed divider slows it down, but we really want this speed not slowed down
 
   // The robot's subsystems
   private final PhotonVisionSensor m_photon = new PhotonVisionSensor();
@@ -76,7 +76,7 @@ public class RobotContainer {
             () -> m_robotDrive.drive(
                 MathUtil.applyDeadband(-m_driverController.getRawAxis(1), OIConstants.kDriveDeadband), // getLeftY()
                 MathUtil.applyDeadband(-m_driverController.getRawAxis(0), OIConstants.kDriveDeadband), // getLeftX()
-                -MathUtil.applyDeadband(m_driverController.getRawAxis(2), OIConstants.kDriveDeadband*2), // getRightX()
+                -MathUtil.applyDeadband(m_driverController.getRawAxis(2), OIConstants.kDriveDeadband*4), // getRightX()
                 true),
             m_robotDrive));
 
@@ -131,50 +131,12 @@ public class RobotContainer {
         .onTrue(new InstantCommand(() -> m_robotDrive.zeroHeading(),m_robotDrive));
 
     // reef positions
-    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(1, HornSelection.L));
-    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(1, HornSelection.R));
-    m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(3)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(1, HornSelection.Between));
-    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(2, HornSelection.L));
-    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(2, HornSelection.R));
-    m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(4)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(2, HornSelection.Between));
-    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(3, HornSelection.L));
-    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(3, HornSelection.R));
-    m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(6)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(3, HornSelection.Between));
-    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(4, HornSelection.L));
-    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(4, HornSelection.R));
-    m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(1)).and(m_photon::getPoseEstimateAcquired)
+    m_buttonPadCmd.button(3).and(m_photon::getPoseEstimateAcquired)
         .whileTrue(driveToReefPositionCmd(4, HornSelection.Between));
-    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(5, HornSelection.L));
-    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(5, HornSelection.R));
-    m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.button(2)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(5, HornSelection.Between));
-    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(6, HornSelection.L));
-    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(6, HornSelection.R));
-    m_driverCmdController.povUp().or(m_driverCmdController.povUpLeft()).or(m_driverCmdController.povUpRight()).and(m_buttonPadCmd.axisGreaterThan(3,TriggerThreshold)).and(m_photon::getPoseEstimateAcquired)
-        .whileTrue(driveToReefPositionCmd(6, HornSelection.Between));
 
     // Coral stations and Processor
-    m_buttonPadCmd.button(5).and(m_photon::getPoseEstimateAcquired) // processor
-        .whileTrue(driveToProcessorCmd());
-    m_driverCmdController.button(FlightButtonLEFT).and(m_buttonPadCmd.axisGreaterThan(2,TriggerThreshold))
+    m_buttonPadCmd.button(1).and(m_photon::getPoseEstimateAcquired) // processor
         .whileTrue(driveToCoralStationCmd(HornSelection.L));
-    m_driverCmdController.button(FlightButtonRIGHT).and(m_buttonPadCmd.axisGreaterThan(2,TriggerThreshold))
-        .whileTrue(driveToCoralStationCmd(HornSelection.R));
 
     // drive robot relative in cardinal directions
     m_buttonPadCmd.povUp().whileTrue(new RunCommand(
